@@ -18,6 +18,7 @@ import time
 from datetime import date
 from os.path import exists
 
+import ffmpeg
 import pytube
 import vimeo
 from pytube import YouTube
@@ -75,11 +76,11 @@ def main():
     logging.info("Downloaded the video and audio tracks")
     logging.info("Now, going to try to magically merge the video and audio with trim")
 
-    # Call local instance of ffmpeg to merge and trim the video.
-    sys.exit(0)
-    command = "ffmpeg -ss {} -to {} -i {} -ss {} -to {} -i {} -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 {}".format(
-        args.start_time, args.end_time, tmp_video_path, args.start_time, args.end_time, tmp_audio_path, tmp_full_path)
-    os.system(command)
+    # Call ffmpeg to merge and trim the video.
+    video = ffmpeg.input(tmp_video_path)
+    audio = ffmpeg.input(tmp_audio_path)
+    output = ffmpeg.output(video, audio, tmp_full_path, vcodec='copy', acodec='aac')
+    output.run()
 
     # Now we want to authenticate against Vimeo and upload the video with title
     client = vimeo.VimeoClient(
@@ -116,8 +117,6 @@ def main():
         "Vimeo URL \"https://vimeo.com/[video_id]\" where the video_id is the number in "
         "the URI\n")
     logging.info("This is the link supplied to the website\n")
-
-    sys.exit(0)
 
 
 def get_absolute_path(file_name):
