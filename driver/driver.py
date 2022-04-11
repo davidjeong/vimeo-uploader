@@ -26,8 +26,10 @@ from pytube.cli import on_progress
 
 from video_configuration import VideoConfiguration
 
-save_path = os.getcwd() + '/tmp_videos'
+save_path = os.getcwd() + '\\tmp_videos'
 youtube_video_regex = "^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$"
+
+logging.basicConfig(filename='output.log', encoding='utf-8', level=logging.DEBUG)
 
 
 def main():
