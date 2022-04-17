@@ -1,7 +1,6 @@
 from tkinter import Tk, Label, Menu, StringVar, Entry, messagebox, LEFT, W, filedialog, Button
 
-from driver.driver import get_vimeo_configuration, Driver, get_seconds
-from driver.video_configuration import VideoConfiguration
+from driver.driver import get_vimeo_configuration, get_video_configuration, Driver
 
 root = Tk()
 
@@ -13,33 +12,33 @@ thumbnail_path = None
 url_prefix = 'https://www.youtube.com/watch?v='
 
 
-def about():
+def about() -> None:
     messagebox.showinfo('About', 'This is a python-based application to download youtube videos, trim them, '
                                  'and re-upload to Vimeo.')
 
 
-def import_config_json():
+def import_config_json() -> None:
     global vimeo_config
     filename = filedialog.askopenfilename(title='Select config file', filetypes=[('json files', '*.json')])
     vimeo_config = get_vimeo_configuration(filename)
 
 
-def get_thumbnail():
+def get_thumbnail() -> None:
     global thumbnail_path
     thumbnail_path = filedialog.askopenfilename(title='Select image file',
                                                 filetypes=[('jpeg files', '*.jpg'), ('png files', '*.png')])
     image_text.set('Thumbnail path: ' + thumbnail_path)
 
 
-def process_video():
+def process_video() -> None:
     process_button['state'] = 'disabled'
     process_button['text'] = 'Processing...'
 
     driver = Driver(vimeo_config=vimeo_config)
-    # video_url, start_time_in_sec, end_time_in_sec, resolution, video_title=None, image_url=None
 
-    video_config = VideoConfiguration(url_prefix + url.get(), get_seconds(start_time.get()), get_seconds(end_time.get()), resolution.get(), title.get(),
-                                      thumbnail_path)
+    video_config = get_video_configuration(url_prefix + url.get(), start_time.get(), end_time.get(), resolution.get(),
+                                           title.get(), thumbnail_path)
+
     driver.process(video_config)
     process_button['state'] = 'enabled'
     process_button['text'] = 'Processing successful!'

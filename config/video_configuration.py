@@ -1,8 +1,8 @@
 class VideoConfiguration:
 
-    def __init__(self, video_url, start_time_in_sec, end_time_in_sec, resolution, video_title=None, image_url=None):
+    def __init__(self, video_url, start_time_in_sec, end_time_in_sec, resolution, video_title=None, image_url=None) -> None:
         """
-        Initialize the configuration object
+        Initialize the video configuration object
         :param video_url: URL to video
         :param start_time_in_sec: Start time of video in seconds
         :param end_time_in_sec: End time of video in seconds

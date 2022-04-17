@@ -7,12 +7,11 @@ This is the script to
 5. upload the video to vimeo with supplied date
 6. edit the video thumbnail
 """
-
-import json
+import argparse
 import logging
-import os
 import re
 import sys
+import tempfile
 import time
 from datetime import date
 
@@ -22,9 +21,11 @@ import vimeo
 from pytube import YouTube
 from pytube.cli import on_progress
 
-from driver.vimeo_configuration import VimeoConfiguration
+from config.video_configuration import VideoConfiguration
+from config.vimeo_configuration import VimeoConfiguration
+from util import get_absolute_path, get_vimeo_configuration, get_video_configuration
 
-save_path = os.getcwd() + '\\tmp_videos'
+save_path = tempfile.gettempdir()
 youtube_video_regex = "^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$"
 
 logging.basicConfig(filename='output.log', encoding='utf-8', level=logging.DEBUG)
@@ -32,10 +33,10 @@ logging.basicConfig(filename='output.log', encoding='utf-8', level=logging.DEBUG
 
 class Driver:
 
-    def __init__(self, vimeo_config):
+    def __init__(self, vimeo_config: VimeoConfiguration) -> None:
         self.vimeo_config = vimeo_config
 
-    def process(self, video_config):
+    def process(self, video_config: VideoConfiguration) -> None:
         url = video_config.video_url
         start_time = video_config.start_time_in_sec
         end_time = video_config.end_time_in_sec
@@ -107,31 +108,7 @@ class Driver:
         return
 
 
-def get_seconds(time_str):
-    h, m, s = time_str.split(':')
-    return int(h) * 3600 + int(m) * 60 + int(s)
-
-
-def get_absolute_path(file_name):
-    return "{}\\{}".format(save_path, file_name)
-
-
-def get_vimeo_configuration(config):
-    config = json.load(open(config))
-    if 'access_token' not in config:
-        raise Exception("access_token is missing from config json")
-    if 'client_id' not in config:
-        raise Exception("client_id is missing from config json")
-    if 'client_secret' not in config:
-        raise Exception("client_secret is missing from config json")
-
-    token = config['access_token'],
-    key = config['client_id'],
-    secret = config['client_secret']
-    return VimeoConfiguration(token, key, secret)
-
-
-def download_youtube_resources(url, video_name, audio_name, resolution):
+def download_youtube_resources(url: str, video_name: str, audio_name: str, resolution: str) -> None:
     try:
         yt = YouTube(url, on_progress_callback=on_progress)
         video = yt.streams.filter(resolution=resolution).first()
@@ -143,15 +120,37 @@ def download_youtube_resources(url, video_name, audio_name, resolution):
         sys.exit(1)
 
 
-def validate_video_url(video_url):
+def validate_video_url(video_url: str) -> None:
     match = re.match(youtube_video_regex, video_url)
     if not match:
         raise Exception("YouTube video URL {}", video_url)
 
 
-def join_and_trim(video_path, audio_path, output_path, start, end):
+def join_and_trim(video_path: str, audio_path: str, output_path: str, start: int, end: int) -> None:
     video = ffmpeg.input(video_path).trim(start=start, end=end)
     audio = ffmpeg.input(audio_path).trim(start=start, end=end)
-    joined= ffmpeg.concat(video, audio, v=1, a=1).node
+    joined = ffmpeg.concat(video, audio, v=1, a=1).node
     output = ffmpeg.output(joined[0], joined[1], output_path)
     output.run()
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-u', '--url', help='URL for YouTube video', required=True)
+    parser.add_argument('-s', '--start', help='Start time of video in format 00:00:00', required=True)
+    parser.add_argument('-e', '--end', help='End time of video in format 00:00:00', required=True)
+    parser.add_argument('-c', '--config', help='Path to the config required by Vimeo', required=True)
+    parser.add_argument('-i', '--image', help='Path to the thumbnail image of the video')
+    parser.add_argument('-r', '--resolution', help='Resolution of the video', default='1080p')
+    parser.add_argument('-t', '--title', help='Title of the video')
+    args = parser.parse_args()
+
+    vimeo_config = get_vimeo_configuration(args.config)
+    video_config = get_video_configuration(args.url, args.start, args.end, args.resolution, args.title, args.image)
+
+    driver = Driver(vimeo_config)
+    driver.process(video_config)
+
+
+if __name__ == "__main__":
+    main()
