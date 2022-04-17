@@ -8,6 +8,7 @@ This is the script to
 6. edit the video thumbnail
 """
 import argparse
+import json
 import logging
 import re
 import sys
@@ -23,7 +24,7 @@ from pytube.cli import on_progress
 
 from config.video_configuration import VideoConfiguration
 from config.vimeo_configuration import VimeoConfiguration
-from util import get_absolute_path, get_vimeo_configuration, get_video_configuration
+from core.util import get_absolute_path, get_vimeo_configuration, get_video_configuration
 
 save_path = tempfile.gettempdir()
 youtube_video_regex = "^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$"
@@ -34,6 +35,9 @@ logging.basicConfig(filename='output.log', encoding='utf-8', level=logging.DEBUG
 class Driver:
 
     def __init__(self, vimeo_config: VimeoConfiguration) -> None:
+        self.vimeo_config = vimeo_config
+
+    def update_vimeo_config(self, vimeo_config: VimeoConfiguration) -> None:
         self.vimeo_config = vimeo_config
 
     def process(self, video_config: VideoConfiguration) -> None:
@@ -49,7 +53,7 @@ class Driver:
         current_time = round(time.time() * 1000)
 
         # sanitization
-        if title is None:
+        if title is None or not title:
             today = date.today()
             current_date = today.strftime("%m/%d/%y")
             title = "(CW) {}".format(current_date)
@@ -59,9 +63,9 @@ class Driver:
         tmp_audio_name = "audio_" + suffix + ".mp3"
         tmp_full_path = "full_" + suffix + ".mp4"
 
-        tmp_video_path = get_absolute_path(tmp_video_name)
-        tmp_audio_path = get_absolute_path(tmp_audio_name)
-        tmp_full_path = get_absolute_path(tmp_full_path)
+        tmp_video_path = get_absolute_path(save_path, tmp_video_name)
+        tmp_audio_path = get_absolute_path(save_path, tmp_audio_name)
+        tmp_full_path = get_absolute_path(save_path, tmp_full_path)
 
         download_youtube_resources(url, tmp_video_name, tmp_audio_name, resolution)
 
@@ -145,7 +149,8 @@ def main() -> None:
     parser.add_argument('-t', '--title', help='Title of the video')
     args = parser.parse_args()
 
-    vimeo_config = get_vimeo_configuration(args.config)
+    config = json.load(open(args.config))
+    vimeo_config = get_vimeo_configuration(config)
     video_config = get_video_configuration(args.url, args.start, args.end, args.resolution, args.title, args.image)
 
     driver = Driver(vimeo_config)

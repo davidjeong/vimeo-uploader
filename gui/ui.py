@@ -1,14 +1,15 @@
 from tkinter import Tk, Label, Menu, StringVar, Entry, messagebox, LEFT, W, filedialog, Button
 
-from driver.driver import get_vimeo_configuration, get_video_configuration, Driver
+from core.driver import Driver
+from core.util import get_vimeo_configuration, get_video_configuration
 
 root = Tk()
 
 root.title("Vimeo Uploader")
 root.geometry('640x480')
 
-vimeo_config = None
-thumbnail_path = None
+vimeo_config: str = None
+thumbnail_path: str = None
 url_prefix = 'https://www.youtube.com/watch?v='
 
 
@@ -19,14 +20,14 @@ def about() -> None:
 
 def import_config_json() -> None:
     global vimeo_config
-    filename = filedialog.askopenfilename(title='Select config file', filetypes=[('json files', '*.json')])
-    vimeo_config = get_vimeo_configuration(filename)
+    filename = filedialog.askopenfilename(title='Select config file', filetypes=[('Config files', '*.json')])
+    vimeo_config = filename
 
 
 def get_thumbnail() -> None:
     global thumbnail_path
     thumbnail_path = filedialog.askopenfilename(title='Select image file',
-                                                filetypes=[('jpeg files', '*.jpg'), ('png files', '*.png')])
+                                                filetypes=[('All Images', ('*.jpg', '*.png'))])
     image_text.set('Thumbnail path: ' + thumbnail_path)
 
 
@@ -34,8 +35,8 @@ def process_video() -> None:
     process_button['state'] = 'disabled'
     process_button['text'] = 'Processing...'
 
-    driver = Driver(vimeo_config=vimeo_config)
-
+    config = get_vimeo_configuration(vimeo_config)
+    driver = Driver(config)
     video_config = get_video_configuration(url_prefix + url.get(), start_time.get(), end_time.get(), resolution.get(),
                                            title.get(), thumbnail_path)
 

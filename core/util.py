@@ -1,4 +1,5 @@
 import json
+from os.path import exists
 
 from config.video_configuration import VideoConfiguration
 from config.vimeo_configuration import VimeoConfiguration
@@ -13,7 +14,11 @@ def get_absolute_path(save_path: str, file_name: str) -> str:
     return "{}\\{}".format(save_path, file_name)
 
 
-def get_vimeo_configuration(config: dict) -> VimeoConfiguration:
+def get_vimeo_configuration(config: str) -> VimeoConfiguration:
+    file_exists = exists(config)
+    if not file_exists:
+        raise Exception("config file does not exist")
+
     config = json.load(open(config))
     if 'access_token' not in config:
         raise Exception("access_token is missing from config json")
@@ -22,8 +27,8 @@ def get_vimeo_configuration(config: dict) -> VimeoConfiguration:
     if 'client_secret' not in config:
         raise Exception("client_secret is missing from config json")
 
-    token = config['access_token'],
-    key = config['client_id'],
+    token = config['access_token']
+    key = config['client_id']
     secret = config['client_secret']
     return VimeoConfiguration(token, key, secret)
 
