@@ -1,3 +1,4 @@
+from threading import Thread
 from tkinter import Tk, Label, Menu, StringVar, Entry, messagebox, LEFT, W, filedialog, Button
 
 from core.driver import Driver
@@ -31,18 +32,32 @@ def get_thumbnail() -> None:
     image_text.set('Thumbnail path: ' + thumbnail_path)
 
 
-def process_video() -> None:
+def enable_process_button() -> None:
+    process_button['state'] = 'normal'
+    process_button['text'] = 'Start Processing'
+
+
+def disable_process_button() -> None:
     process_button['state'] = 'disabled'
-    process_button['text'] = 'Processing...'
+    process_button['text'] = 'In Progress...'
 
-    config = get_vimeo_configuration(vimeo_config)
-    driver = Driver(config)
-    video_config = get_video_configuration(url_prefix + url.get(), start_time.get(), end_time.get(), resolution.get(),
-                                           title.get(), thumbnail_path)
 
-    driver.process(video_config)
-    process_button['state'] = 'enabled'
-    process_button['text'] = 'Processing successful!'
+def process_video() -> None:
+    def process():
+        disable_process_button()
+        try:
+            config = get_vimeo_configuration(vimeo_config)
+            driver = Driver(config)
+            video_config = get_video_configuration(url_prefix + url.get(), start_time.get().strip(),
+                                                   end_time.get().strip(),
+                                                   resolution.get(), title.get(), thumbnail_path)
+            driver.process(video_config)
+        except Exception as e:
+            messagebox.showerror('Error', 'Failed to process the video with input configuration!')
+        enable_process_button()
+
+    th = Thread(task=process())
+    th.start()
 
 
 menubar = Menu(root, background='#ff8000', foreground='black', activebackground='white', activeforeground='black')
@@ -75,7 +90,7 @@ resolution_entry = Entry(root, textvariable=resolution, font=('Helvetica', 10), 
 title_label = Label(root, text="Title of the video", font=('Helvetica', 10), justify=LEFT)
 title_entry = Entry(root, textvariable=title, font=('Helvetica', 10), width=20, justify=LEFT)
 
-process_button = Button(root, text='Start processing', font=('Helvetica', 10, 'bold'), command=process_video,
+process_button = Button(root, text='Start Processing', font=('Helvetica', 10, 'bold'), command=process_video,
                         justify=LEFT)
 
 url_label.grid(sticky=W, row=1, column=0)

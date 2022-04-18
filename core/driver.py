@@ -42,8 +42,8 @@ class Driver:
 
     def process(self, video_config: VideoConfiguration) -> None:
         url = video_config.video_url
-        start_time = video_config.start_time_in_sec
-        end_time = video_config.end_time_in_sec
+        start_time = video_config.start_time
+        end_time = video_config.end_time
         image = video_config.image_url
         resolution = video_config.resolution
         title = video_config.video_title
@@ -76,8 +76,10 @@ class Driver:
 
         # Call ffmpeg to merge.
         join_resource(tmp_video_path, tmp_audio_path, tmp_combined_path)
+        logging.info("Finished joining the video")
         # Call ffmpeg to trim.
         trim_resource(tmp_combined_path, tmp_final_path, start_time, end_time)
+        logging.info("Finished trimming the video")
 
         # Now we want to authenticate against Vimeo and upload the video with title
         client = vimeo.VimeoClient(
@@ -86,9 +88,9 @@ class Driver:
             secret=self.vimeo_config.secret
         )
 
-        logging.info('Uploading video to Vimeo from path: %s' % tmp_full_path)
+        logging.info('Uploading video to Vimeo from path: %s' % tmp_final_path)
         try:
-            uri = client.upload(tmp_full_path, data={
+            uri = client.upload(tmp_final_path, data={
                 'name': title,
                 'privacy': {
                     'comments': 'nobody'
@@ -101,7 +103,7 @@ class Driver:
         except vimeo.exceptions.VideoUploadFailure as e:
             # We may have had an error. We can't resolve it here necessarily, so
             # report it to the user.
-            logging.error('Error uploading %s' % tmp_full_path)
+            logging.error('Error uploading %s' % tmp_final_path)
             logging.error('Server reported: %s' % e.message)
             sys.exit(1)
 
@@ -165,8 +167,7 @@ def main() -> None:
     parser.add_argument('-t', '--title', help='Title of the video')
     args = parser.parse_args()
 
-    config = json.load(open(args.config))
-    vimeo_config = get_vimeo_configuration(config)
+    vimeo_config = get_vimeo_configuration(args.config)
     video_config = get_video_configuration(args.url, args.start, args.end, args.resolution, args.title, args.image)
 
     driver = Driver(vimeo_config)
