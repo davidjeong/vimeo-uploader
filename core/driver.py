@@ -61,19 +61,23 @@ class Driver:
         suffix = str(current_time)
         tmp_video_name = "video_" + suffix + ".mp4"
         tmp_audio_name = "audio_" + suffix + ".mp3"
-        tmp_full_path = "full_" + suffix + ".mp4"
+        tmp_combined_name = "combined_" + suffix + ".mp4"
+        tmp_final_name = "final_" + suffix + ".mp4"
 
         tmp_video_path = get_absolute_path(save_path, tmp_video_name)
         tmp_audio_path = get_absolute_path(save_path, tmp_audio_name)
-        tmp_full_path = get_absolute_path(save_path, tmp_full_path)
+        tmp_combined_path = get_absolute_path(save_path, tmp_combined_name)
+        tmp_final_path = get_absolute_path(save_path, tmp_final_name)
 
         download_youtube_resources(url, tmp_video_name, tmp_audio_name, resolution)
 
         logging.info("Downloaded the video and audio tracks")
         logging.info("Now, going to try to magically merge the video and audio with trim")
 
-        # Call ffmpeg to merge and trim the video.
-        join_and_trim(tmp_video_path, tmp_audio_path, tmp_full_path, start_time, end_time)
+        # Call ffmpeg to merge.
+        join_resource(tmp_video_path, tmp_audio_path, tmp_combined_path)
+        # Call ffmpeg to trim.
+        trim_resource(tmp_combined_path, tmp_final_path, start_time, end_time)
 
         # Now we want to authenticate against Vimeo and upload the video with title
         client = vimeo.VimeoClient(
@@ -121,7 +125,7 @@ def download_youtube_resources(url: str, video_name: str, audio_name: str, resol
         audio.download(save_path, audio_name)
     except pytube.exceptions.PytubeError as e:
         print("Failed to download the video or audio " + str(e))
-        sys.exit(1)
+        raise e
 
 
 def validate_video_url(video_url: str) -> None:
@@ -130,9 +134,21 @@ def validate_video_url(video_url: str) -> None:
         raise Exception("YouTube video URL {}", video_url)
 
 
-def join_and_trim(video_path: str, audio_path: str, output_path: str, start: int, end: int) -> None:
-    video = ffmpeg.input(video_path).trim(start=start, end=end)
-    audio = ffmpeg.input(audio_path).trim(start=start, end=end)
+def join_resource(video_path: str, audio_path: str, output_path: str) -> None:
+    video = ffmpeg.input(video_path)
+    audio = ffmpeg.input(audio_path)
+    output = ffmpeg.output(video, audio, output_path, vcodec='copy', acodec='aac')
+    output.run()
+
+
+def trim_resource(input_path: str, output_path: str, start_time: str, end_time: str) -> None:
+    input_stream = ffmpeg.input(input_path)
+    video = (
+        input_stream.video.trim(start=start_time, end=end_time).setpts('PTS-STARTPTS')
+    )
+    audio = (
+        input_stream.audio.filter_('atrim', start=start_time, end=end_time).filter_('asetpts', 'PTS-STARTPTS')
+    )
     joined = ffmpeg.concat(video, audio, v=1, a=1).node
     output = ffmpeg.output(joined[0], joined[1], output_path)
     output.run()
