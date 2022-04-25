@@ -1,18 +1,17 @@
-import tempfile
 from os.path import exists
+from unittest import mock
 
 import pytest
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from mutagen.mp4 import MP4
 
-from core.driver import download_youtube_resources, join_resource, trim_resource
+from core.driver import download_youtube_resources, join_resource, trim_resource, upload_video_to_vimeo
 from core.util import get_absolute_path
 
 
-@pytest.mark.order1
 def test_download_youtube_resources_and_combine(tmpdir) -> None:
     """
-    Download resources from YouTube
+    Test download resources from YouTube, merging the video/audio and trim.
     :return: Nothing
     """
     # BTS (방탄소년단) '작은 것들을 위한 시 (Boy With Luv) (feat. Halsey)' Official MV
@@ -42,11 +41,31 @@ def test_download_youtube_resources_and_combine(tmpdir) -> None:
     assert int(video.duration) == 252
     assert int(video.audio.duration) == 252
 
-    trim_resource(combined_path, final_path, '00:01:00', '00:02:00')
+    trim_resource(combined_path, final_path, 60, 120)
 
     assert exists(final_path)
     video = VideoFileClip(final_path)
-    assert int(video.duration) == 60
-    assert int(video.audio.duration) == 60
+    assert int(video.duration) >= 60 or int(video.duration) <= 61
+    assert int(video.audio.duration) >= 60 or int(video.duration) <= 61
 
     print("Final video in " + final_path)
+
+
+# @mock.patch('vimeo.VimeoClient.upload', return_value="http://www.vimeo.com/foobarbaz")
+# def test_upload_video_to_vimeo(client_mock) -> None:
+#     """
+#     Test uploading video to vimeo using mock client
+#     :return: Nothing
+#     """
+#     video_path = "/path/to/video"
+#     video_title = "new title"
+#     uri = upload_video_to_vimeo(client_mock, video_path, video_title)
+#
+#     data_json = {
+#         'name': video_title,
+#         'privacy': {
+#             'comments': 'nobody'
+#         }
+#     }
+#     client_mock.assert_called_with(video_path, data=data_json)
+#     # assert uri == "http://www.vimeo.com/foobarbaz"

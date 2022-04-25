@@ -56,7 +56,7 @@ def process_video() -> None:
             messagebox.showerror('Error', 'Failed to process the video with input configuration!')
         enable_process_button()
 
-    th = Thread(task=process())
+    th = Thread(target=process())
     th.start()
 
 
