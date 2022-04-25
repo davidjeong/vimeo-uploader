@@ -1,6 +1,8 @@
+build
 dist
 .idea
 __pycache__/
 vimeo_uploader.egg-info/
 tmp_videos/
 *.log
+ui.spec

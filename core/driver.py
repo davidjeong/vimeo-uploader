@@ -8,7 +8,6 @@ This is the script to
 6. edit the video thumbnail
 """
 import argparse
-import json
 import logging
 import re
 import sys
@@ -16,15 +15,15 @@ import tempfile
 import time
 from datetime import date
 
-import ffmpeg
 import pytube
 import vimeo
+from moviepy.video.io.ffmpeg_tools import ffmpeg_merge_video_audio, ffmpeg_extract_subclip
 from pytube import YouTube
 from pytube.cli import on_progress
 
 from config.video_configuration import VideoConfiguration
 from config.vimeo_configuration import VimeoConfiguration
-from core.util import get_absolute_path, get_vimeo_configuration, get_video_configuration
+from core.util import get_absolute_path, get_vimeo_configuration, get_video_configuration, get_seconds
 
 save_path = tempfile.gettempdir()
 youtube_video_regex = "^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$"
@@ -42,8 +41,8 @@ class Driver:
 
     def process(self, video_config: VideoConfiguration) -> None:
         url = video_config.video_url
-        start_time = video_config.start_time
-        end_time = video_config.end_time
+        start_time_in_sec = video_config.start_time_in_sec
+        end_time_in_sec = video_config.end_time_in_sec
         image = video_config.image_url
         resolution = video_config.resolution
         title = video_config.video_title
@@ -78,7 +77,7 @@ class Driver:
         join_resource(tmp_video_path, tmp_audio_path, tmp_combined_path)
         logging.info("Finished joining the video")
         # Call ffmpeg to trim.
-        trim_resource(tmp_combined_path, tmp_final_path, start_time, end_time)
+        trim_resource(tmp_combined_path, tmp_final_path, start_time_in_sec, end_time_in_sec)
         logging.info("Finished trimming the video")
 
         # Now we want to authenticate against Vimeo and upload the video with title
@@ -89,26 +88,10 @@ class Driver:
         )
 
         logging.info('Uploading video to Vimeo from path: %s' % tmp_final_path)
-        try:
-            uri = client.upload(tmp_final_path, data={
-                'name': title,
-                'privacy': {
-                    'comments': 'nobody'
-                }
-            })
-
-            video_data = client.get(uri + '?fields=transcode.status').json()
-            logging.info('The transcode status for {} is: {}'.format(uri, video_data['transcode']['status']))
-
-        except vimeo.exceptions.VideoUploadFailure as e:
-            # We may have had an error. We can't resolve it here necessarily, so
-            # report it to the user.
-            logging.error('Error uploading %s' % tmp_final_path)
-            logging.error('Server reported: %s' % e.message)
-            sys.exit(1)
+        uri = upload_video_to_vimeo(client, tmp_final_path, title)
 
         # Activate the thumbnail image on video if passed in
-        if image:
+        if uri is not None and image:
             client.upload_picture(uri, image, activate=True)
 
         logging.info(
@@ -137,23 +120,39 @@ def validate_video_url(video_url: str) -> None:
 
 
 def join_resource(video_path: str, audio_path: str, output_path: str) -> None:
-    video = ffmpeg.input(video_path)
-    audio = ffmpeg.input(audio_path)
-    output = ffmpeg.output(video, audio, output_path, vcodec='copy', acodec='aac')
-    output.run()
+    ffmpeg_merge_video_audio(video_path, audio_path, output_path)
 
 
-def trim_resource(input_path: str, output_path: str, start_time: str, end_time: str) -> None:
-    input_stream = ffmpeg.input(input_path)
-    video = (
-        input_stream.video.trim(start=start_time, end=end_time).setpts('PTS-STARTPTS')
-    )
-    audio = (
-        input_stream.audio.filter_('atrim', start=start_time, end=end_time).filter_('asetpts', 'PTS-STARTPTS')
-    )
-    joined = ffmpeg.concat(video, audio, v=1, a=1).node
-    output = ffmpeg.output(joined[0], joined[1], output_path)
-    output.run()
+def trim_resource(input_path: str, output_path: str, start_time_in_sec: int, end_time_in_sec: int) -> None:
+    ffmpeg_extract_subclip(input_path, start_time_in_sec, end_time_in_sec, output_path)
+
+
+def upload_video_to_vimeo(client: vimeo.VimeoClient, video_path: str, video_title: str) -> str:
+    """
+    Try to upload the video to vimeo using vimeo client.
+    :param client: client to upload the video with
+    :param video_path: path to the video
+    :param video_title: title of the video
+    :return: URI if successful, otherwise None
+    """
+
+    try:
+        uri = client.upload(video_path, data={
+            'name': video_title,
+            'privacy': {
+                'comments': 'nobody'
+            }
+        })
+    except vimeo.exceptions.VideoUploadFailure as e:
+        # We may have had an error. We can't resolve it here necessarily, so
+        # report it to the user.
+        logging.error('Error uploading %s' % video_path)
+        logging.error('Server reported: %s' % e.message)
+        return None
+
+    video_data = client.get(uri + '?fields=transcode.status').json()
+    logging.info('The transcode status for {} is: {}'.format(uri, video_data['transcode']['status']))
+    return uri
 
 
 def main() -> None:
@@ -168,7 +167,12 @@ def main() -> None:
     args = parser.parse_args()
 
     vimeo_config = get_vimeo_configuration(args.config)
-    video_config = get_video_configuration(args.url, args.start, args.end, args.resolution, args.title, args.image)
+
+    try:
+        video_config = get_video_configuration(args.url, args.start, args.end, args.resolution, args.title, args.image)
+    except Exception as e:
+        logging.error("Failed with exception " % e)
+        sys.exit(1)
 
     driver = Driver(vimeo_config)
     driver.process(video_config)
