@@ -1,7 +1,8 @@
+import os
+import shutil
 from os.path import exists
 from unittest import mock
 
-import pytest
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from mutagen.mp4 import MP4
 
@@ -18,9 +19,8 @@ def test_download_youtube_resources_and_combine(tmpdir) -> None:
     test_url = 'https://www.youtube.com/watch?v=XsX3ATc3FbA'
     test_resolution = '1080p'
 
-    save_path = tmpdir
-    tmp_video_path = get_absolute_path(save_path, 'v.mp4')
-    tmp_audio_path = get_absolute_path(save_path, 'a.mp3')
+    tmp_video_path = get_absolute_path(tmpdir, 'v.mp4')
+    tmp_audio_path = get_absolute_path(tmpdir, 'a.mp3')
 
     download_youtube_resources(test_url, tmp_video_path, tmp_audio_path, test_resolution)
 
@@ -32,8 +32,8 @@ def test_download_youtube_resources_and_combine(tmpdir) -> None:
     audio = MP4(tmp_audio_path)
     assert int(audio.info.length) == 252
 
-    combined_path = get_absolute_path(save_path, "c.mp4")
-    final_path = get_absolute_path(save_path, "f.mp4")
+    combined_path = get_absolute_path(tmpdir, "c.mp4")
+    final_path = get_absolute_path(tmpdir, "f.mp4")
     join_resource(tmp_video_path, tmp_audio_path, combined_path)
 
     assert exists(combined_path)
@@ -51,21 +51,19 @@ def test_download_youtube_resources_and_combine(tmpdir) -> None:
     print("Final video in " + final_path)
 
 
-# @mock.patch('vimeo.VimeoClient.upload', return_value="http://www.vimeo.com/foobarbaz")
-# def test_upload_video_to_vimeo(client_mock) -> None:
-#     """
-#     Test uploading video to vimeo using mock client
-#     :return: Nothing
-#     """
-#     video_path = "/path/to/video"
-#     video_title = "new title"
-#     uri = upload_video_to_vimeo(client_mock, video_path, video_title)
-#
-#     data_json = {
-#         'name': video_title,
-#         'privacy': {
-#             'comments': 'nobody'
-#         }
-#     }
-#     client_mock.assert_called_with(video_path, data=data_json)
-#     # assert uri == "http://www.vimeo.com/foobarbaz"
+def test_upload_video_to_vimeo() -> None:
+    """
+    Test uploading video to vimeo using mock client
+    :return: Nothing
+    """
+    video_path = "/path/to/video"
+    video_title = "new title"
+    client = mock.MagicMock()
+    upload_video_to_vimeo(client, video_path, video_title)
+    data_json = {
+        'name': video_title,
+        'privacy': {
+            'comments': 'nobody'
+        }
+    }
+    client.upload.assert_called_with(video_path, data=data_json)
