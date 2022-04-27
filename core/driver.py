@@ -148,7 +148,7 @@ def upload_video_to_vimeo(client: vimeo.VimeoClient, video_path: str, video_titl
         # report it to the user.
         logging.error('Error uploading %s' % video_path)
         logging.error('Server reported: %s' % e.message)
-        return None
+        raise e
 
     video_data = client.get(uri + '?fields=transcode.status').json()
     logging.info('The transcode status for {} is: {}'.format(uri, video_data['transcode']['status']))
