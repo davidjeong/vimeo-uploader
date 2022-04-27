@@ -45,9 +45,6 @@ def get_vimeo_configuration(config: str) -> VimeoConfiguration:
 
 def get_video_configuration(video_url: str, start_time: str, end_time: str, resolution: str, video_title: str,
                             image_url: str) -> VideoConfiguration:
-    try:
-        start_time_in_sec = get_seconds(start_time)
-        end_time_in_sec = get_seconds(end_time)
-    except ValueError as e:
-        raise Exception(e)
+    start_time_in_sec = get_seconds(start_time)
+    end_time_in_sec = get_seconds(end_time)
     return VideoConfiguration(video_url, start_time_in_sec, end_time_in_sec, resolution, video_title, image_url)
