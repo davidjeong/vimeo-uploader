@@ -1,9 +1,14 @@
+"""
+Main entry for GUI
+"""
+
 import logging
 import os.path
 import platform
 import shutil
 import sys
 import threading
+from dataclasses import dataclass
 from tkinter import Tk, Menu, StringVar, messagebox, LEFT, W, filedialog, Button, ttk
 
 import vimeo
@@ -11,208 +16,326 @@ from pytube import YouTube
 from pytube.exceptions import RegexMatchError
 
 from core.driver import Driver
-from core.exceptions import VimeoConfigurationException
 from core.util import get_vimeo_configuration, get_video_configuration, get_youtube_url
 from model.config import AppDirectoryConfiguration, YoutubeVideoMetadata
+from model.exception import VimeoConfigurationException
 
-root = Tk()
-root.title("Vimeo Uploader")
-root.geometry('640x480')
 
-thumbnail_path: str = None
-empty_resolution = ['N/A']
-app_directory_name = "Vimeo Uploader"
-app_directory_config: AppDirectoryConfiguration = None
+EMPTY_RESOLUTION = ['N/A']
+APP_DIRECTORY_NAME = "Vimeo Uploader"
 
 
 def _about() -> None:
-    messagebox.showinfo('About', 'This is a python-based application to download youtube videos, trim them, '
-                                 'and re-upload to Vimeo.')
+    messagebox.showinfo(
+        'About',
+        'This is a python-based application to download youtube videos, trim them, '
+        'and re-upload to Vimeo.')
 
 
-def _import_config_yaml() -> None:
-    filename = filedialog.askopenfilename(title='Select config file', filetypes=[('Config files', '*.yaml')])
-    try:
-        get_vimeo_configuration(filename)
-        shutil.copy(filename, app_directory_config.get_vimeo_config_file_path())
-    except VimeoConfigurationException:
-        logging.error("Config file is not valid format")
+@dataclass
+class ThumbnailHandler:
+    """
+    Data class for thumbnail path
+    """
+    thumbnail_path: str = None
 
 
-def _get_thumbnail() -> None:
-    global thumbnail_path
-    new_thumbnail_path = filedialog.askopenfilename(title='Select image file',
-                                                    filetypes=[('All Images', ('*.jpg', '*.png'))])
-    if new_thumbnail_path != '' and new_thumbnail_path != thumbnail_path:
-        thumbnail_path = new_thumbnail_path
-        image_text.set('Thumbnail path: ' + new_thumbnail_path)
+class VimeoUploader:
+    """
+    Main class for vimeo uploader
+    """
 
+    def __init__(self):
+        self.root = Tk()
+        self.thumbnail_handler = ThumbnailHandler()
+        self.app_directory_config = self._initialize_directories()
+        # String Var
+        self.video_id_str = StringVar()
+        self.video_information_str = StringVar()
+        self.start_time = StringVar()
+        self.end_time = StringVar()
+        self.image_text = StringVar()
+        self.resolution = StringVar()
+        self.title = StringVar()
+        # Root element
 
-def _get_video_metadata(video_id: str) -> None:
-    video_id = video_id.get()
-    video_resolutions = []
-    video_metadata = None
+        self.video_id_label = ttk.Label(
+            self.root, text='Video ID', font=(
+                'Helvetica', 10), justify=LEFT)
+        self.video_id_entry = ttk.Entry(
+            self.root, textvariable=self.video_id_str, font=(
+                'Helvetica', 10), width=15, justify=LEFT)
+        self.video_information_label = ttk.Label(
+            self.root, text='', font=(
+                'Helvetica', 10), justify=LEFT)
+        self.start_label = ttk.Label(
+            self.root,
+            text='Start time of video in format 00:00:00',
+            font=(
+                'Helvetica',
+                10),
+            justify=LEFT)
+        self.start_entry = ttk.Entry(
+            self.root,
+            textvariable=self.start_time,
+            font=(
+                'Helvetica',
+                10),
+            justify=LEFT,
+            width=10)
+        self.end_label = ttk.Label(
+            self.root,
+            text='End time of video in format 00:00:00',
+            font=(
+                'Helvetica',
+                10),
+            justify=LEFT)
+        self.end_entry = ttk.Entry(
+            self.root,
+            textvariable=self.end_time,
+            font=(
+                'Helvetica',
+                10),
+            width=10,
+            justify=LEFT)
+        self.image_label = ttk.Label(
+            self.root, textvariable=self.image_text, font=(
+                'Helvetica', 10), justify=LEFT)
+        self.image_button = Button(
+            self.root,
+            text='Click to set',
+            font=(
+                'Helvetica',
+                10),
+            command=self._get_thumbnail,
+            justify=LEFT)
+        self.resolution_label = ttk.Label(
+            self.root, text='Video resolution (e.g. 1080p)', font=(
+                'Helvetica', 10), justify=LEFT)
+        self.resolution_option = ttk.OptionMenu(
+            self.root,
+            self.resolution,
+            EMPTY_RESOLUTION[0],
+            *EMPTY_RESOLUTION)
+        self.title_label = ttk.Label(
+            self.root, text="Title of the video", font=(
+                'Helvetica', 10), justify=LEFT)
+        self.title_entry = ttk.Entry(
+            self.root,
+            textvariable=self.title,
+            font=(
+                'Helvetica',
+                10),
+            width=20,
+            justify=LEFT)
+        self.process_button = Button(
+            self.root,
+            text='Start Processing',
+            font=(
+                'Helvetica',
+                10,
+                'bold'),
+            command=self._process_video,
+            justify=LEFT)
 
-    def _update_video_resolution_dropdown() -> None:
-        resolution_option["menu"].delete(0, "end")
-        for item in video_resolutions:
-            resolution_option["menu"].add_command(
-                label=item,
-                command=lambda value=item: resolution.set(value)
-            )
-        resolution.set(video_resolutions[-1])
+    def _get_thumbnail(self) -> str:
+        new_thumbnail_path = filedialog.askopenfilename(
+            title='Select image file', filetypes=[
+                ('All Images', ('*.jpg', '*.png'))])
+        if new_thumbnail_path not in (
+                '', self.thumbnail_handler.thumbnail_path):
+            self.image_text.set('Thumbnail path: ' + new_thumbnail_path)
+            self.thumbnail_handler.thumbnail_path = new_thumbnail_path
 
-    def _update_video_information() -> None:
-        if video_metadata is not None:
-            info_dump = f"Title: {video.title[0:20]}...\nAuthor: {video.author}\nLength: {video.length} " \
-                        f"seconds\nPublish Date: {video.publish_date}"
-            messagebox.showinfo('Video Information', info_dump)
+    @staticmethod
+    def _initialize_directories() -> AppDirectoryConfiguration:
+        """
+        Initialize the environment folders and configuration files
+        :return: None
+        """
+        ops = platform.system()
+        if ops == 'Windows':
+            documents_folder = 'My Documents'
+        elif ops == 'Darwin':
+            documents_folder = 'Documents'
+        else:
+            logging.info("Running on unsupported os %s", ops)
+            sys.exit(1)
+        root_dir = os.path.join(
+            os.path.expanduser('~'),
+            documents_folder,
+            APP_DIRECTORY_NAME)
+        if not os.path.exists(root_dir):
+            logging.info("Creating dir under %s", root_dir)
+            os.mkdir(root_dir)
+        video_root_dir = os.path.join(root_dir, 'videos')
+        if not os.path.exists(video_root_dir):
+            logging.info("Creating video dir under %s", video_root_dir)
+            os.mkdir(video_root_dir)
+        configs_root_dir = os.path.join(root_dir, 'configs')
+        if not os.path.exists(configs_root_dir):
+            logging.info("Creating configs dir under %s", configs_root_dir)
+            os.mkdir(configs_root_dir)
+        return AppDirectoryConfiguration(
+            root_dir, video_root_dir, configs_root_dir)
 
-    def _get_resolution_sort_key(res: str) -> int:
-        return int(res[:-1])
-
-    new_video_resolutions = set()
-    new_video_metadata = None
-    try:
-        video = YouTube(get_youtube_url(video_id))
-        new_video_metadata = YoutubeVideoMetadata(video.video_id, video.title, video.author, video.length,
-                                                  video.publish_date)
-        logging.info(f"Video metadata: {video.video_id}, {video.title}, {video.author}, {video.length}, "
-                     f"{video.publish_date}")
-        for stream in video.streams:
-            new_video_resolutions.add(stream.resolution)
-    except RegexMatchError as e:
-        logging.debug(e)
-    if new_video_metadata is None:
-        video_resolutions = ['N/A']
-        video_metadata = None
-    else:
-        # Update video resolutions
-        video_resolutions = sorted([res for res in new_video_resolutions if res], key=_get_resolution_sort_key)
-        video_metadata = new_video_metadata
-    _update_video_information()
-    _update_video_resolution_dropdown()
-
-
-def enable_process_button() -> None:
-    process_button['state'] = 'normal'
-    process_button['text'] = 'Start Processing'
-
-
-def disable_process_button() -> None:
-    process_button['state'] = 'disabled'
-    process_button['text'] = 'In Progress...'
-
-
-def process_video() -> None:
-    def process():
+    def _import_config_yaml(self) -> None:
+        filename = filedialog.askopenfilename(
+            title='Select config file', filetypes=[
+                ('Config files', '*.yaml')])
         try:
-            vimeo_config = get_vimeo_configuration(app_directory_config.get_vimeo_config_file_path())
-            driver = Driver(vimeo_config, app_directory_config)
-            video_config = get_video_configuration(video_id_str.get(), start_time.get().strip(),
-                                                   end_time.get().strip(),
-                                                   resolution.get(), title.get(), thumbnail_path)
-            driver.process(video_config)
-        except vimeo.exceptions.VideoUploadFailure:
-            messagebox.showerror('Error', 'Failed to process the video with input configuration!')
+            get_vimeo_configuration(filename)
+            shutil.copy(
+                filename,
+                self.app_directory_config.get_vimeo_config_file_path())
+        except VimeoConfigurationException:
+            logging.error("Config file is not valid format")
 
-    disable_process_button()
-    th = threading.Thread(target=process)
-    th.start()
-    _schedule_check(th)
+    def _enable_process_button(self) -> None:
+        self.process_button['state'] = 'normal'
+        self.process_button['text'] = 'Start Processing'
+
+    def _disable_process_button(self) -> None:
+        self.process_button['state'] = 'disabled'
+        self.process_button['text'] = 'In Progress...'
+
+    def _schedule_check(self, thread):
+        self.root.after(1000, self._check_if_done, thread)
+
+    def _check_if_done(self, thread):
+        if not thread.is_alive():
+            self._enable_process_button()
+        else:
+            self._schedule_check(thread)
+
+    def drive(self):
+        """
+        Main driver of application
+        :return:
+        """
+        self.root.title("Vimeo Uploader")
+        self.root.geometry('640x480')
+
+        menubar = Menu(
+            self.root,
+            background='#ff8000',
+            foreground='black',
+            activebackground='white',
+            activeforeground='black')
+        file = Menu(menubar, tearoff=1)
+        file.add_command(label='About', command=_about)
+        file.add_command(
+            label='Import config',
+            command=self._import_config_yaml)
+        file.add_command(label='Quit', command=self.root.quit)
+        menubar.add_cascade(label='File', menu=file)
+
+        self.root.config(menu=menubar)
+        self.video_id_str.trace(
+            "w",
+            lambda name,
+            index,
+            mode,
+            video_id=self.video_id_str: self._get_video_metadata(video_id))
+
+        self.image_text.set("Path to thumbnail image (optional)")
+
+        self.video_id_label.grid(sticky=W, row=1, column=0)
+        self.video_id_entry.grid(sticky=W, row=1, column=1)
+        self.video_information_label.grid(sticky=W, row=1, column=2)
+        self.start_label.grid(sticky=W, row=2, column=0)
+        self.start_entry.grid(sticky=W, row=2, column=1)
+        self.end_label.grid(sticky=W, row=3, column=0)
+        self.end_entry.grid(sticky=W, row=3, column=1)
+        self.image_label.grid(sticky=W, row=4, column=0)
+        self.image_button.grid(sticky=W, row=4, column=1)
+        self.resolution_label.grid(sticky=W, row=5, column=0)
+        self.resolution_option.grid(sticky=W, row=5, column=1)
+        self.title_label.grid(sticky=W, row=6, column=0)
+        self.title_entry.grid(sticky=W, row=6, column=1)
+        self.process_button.grid(sticky=W, row=7, column=1)
+
+        self.root.mainloop()
+
+    def _process_video(self) -> None:
+        def process():
+            try:
+                vimeo_config = get_vimeo_configuration(
+                    self.app_directory_config.get_vimeo_config_file_path())
+                driver = Driver(vimeo_config, self.app_directory_config)
+                video_config = get_video_configuration(
+                    self.video_id_str.get(),
+                    self.start_time.get().strip(),
+                    self.end_time.get().strip(),
+                    self.resolution.get(),
+                    self.title.get(),
+                    self.thumbnail_handler.thumbnail_path)
+                driver.process(video_config)
+            except vimeo.exceptions.VideoUploadFailure:
+                messagebox.showerror(
+                    'Error', 'Failed to process the video with input configuration!')
+
+        self._disable_process_button()
+        thread = threading.Thread(target=process)
+        thread.start()
+        self._schedule_check(thread)
+
+    def _get_video_metadata(self, video_id: str) -> None:
+        video_id = video_id.get()
+        video_resolutions = []
+        video_metadata = None
+
+        def _update_video_resolution_dropdown() -> None:
+            self.resolution_option["menu"].delete(0, "end")
+            for item in video_resolutions:
+                self.resolution_option["menu"].add_command(
+                    label=item,
+                    command=lambda value=item: self.resolution.set(value)
+                )
+            self.resolution.set(video_resolutions[-1])
+
+        def _update_video_information() -> None:
+            if video_metadata is not None:
+                info_dump = f"Title: {video.title[0:20]}...\nAuthor: {video.author}\nLength: {video.length} " \
+                            f"seconds\nPublish Date: {video.publish_date}"
+                messagebox.showinfo('Video Information', info_dump)
+
+        def _get_resolution_sort_key(res: str) -> int:
+            return int(res[:-1])
+
+        new_video_resolutions = set()
+        new_video_metadata = None
+        try:
+            video = YouTube(get_youtube_url(video_id))
+            new_video_metadata = YoutubeVideoMetadata(
+                video.video_id,
+                video.title,
+                video.author,
+                video.length,
+                video.publish_date)
+            logging.info(
+                "Video metadata: %s, %s, %s, %s, %s",
+                video.video_id,
+                video.title,
+                video.author,
+                video.length,
+                video.publish_date)
+            for stream in video.streams:
+                new_video_resolutions.add(stream.resolution)
+        except RegexMatchError as error:
+            logging.debug(error)
+        if new_video_metadata is None:
+            video_resolutions = ['N/A']
+            video_metadata = None
+        else:
+            # Update video resolutions
+            video_resolutions = sorted(
+                [res for res in new_video_resolutions if res], key=_get_resolution_sort_key)
+            video_metadata = new_video_metadata
+        _update_video_information()
+        _update_video_resolution_dropdown()
 
 
-def _schedule_check(thread):
-    root.after(1000, _check_if_done, thread)
-
-
-def _check_if_done(thread):
-    if not thread.is_alive():
-        enable_process_button()
-    else:
-        _schedule_check(thread)
-
-
-def init() -> None:
-    """
-    Initialize the environment folders and configuration files
-    :return: None
-    """
-    ops = platform.system()
-    if ops == 'Windows':
-        documents_folder = 'My Documents'
-    elif ops == 'Darwin':
-        documents_folder = 'Documents'
-    else:
-        logging.info("Running on unsupported os " + ops)
-        sys.exit(1)
-    root_dir = os.path.join(os.path.expanduser('~'), documents_folder, app_directory_name)
-    if not os.path.exists(root_dir):
-        logging.info("Creating dir under " + root_dir)
-        os.mkdir(root_dir)
-    video_root_dir = os.path.join(root_dir, 'videos')
-    if not os.path.exists(video_root_dir):
-        logging.info("Creating video dir under " + video_root_dir)
-        os.mkdir(video_root_dir)
-    configs_root_dir = os.path.join(root_dir, 'configs')
-    if not os.path.exists(configs_root_dir):
-        logging.info("Creating configs dir under " + configs_root_dir)
-        os.mkdir(configs_root_dir)
-    global app_directory_config
-    app_directory_config = AppDirectoryConfiguration(root_dir, video_root_dir, configs_root_dir)
-
-
-init()
-
-menubar = Menu(root, background='#ff8000', foreground='black', activebackground='white', activeforeground='black')
-file = Menu(menubar, tearoff=1)
-file.add_command(label='About', command=_about)
-file.add_command(label='Import config', command=_import_config_yaml)
-file.add_command(label='Quit', command=root.quit)
-menubar.add_cascade(label='File', menu=file)
-
-root.config(menu=menubar)
-
-video_id_str = StringVar()
-video_id_str.trace("w", lambda name, index, mode, video_id=video_id_str: _get_video_metadata(video_id))
-video_information_str = StringVar()
-start_time = StringVar()
-end_time = StringVar()
-image_text = StringVar()
-image_text.set("Path to thumbnail image (optional)")
-resolution = StringVar()
-title = StringVar()
-
-video_id_label = ttk.Label(root, text='Video ID', font=('Helvetica', 10), justify=LEFT)
-video_id_entry = ttk.Entry(root, textvariable=video_id_str, font=('Helvetica', 10), width=15, justify=LEFT)
-video_information_label = ttk.Label(root, text='', font=('Helvetica', 10), justify=LEFT)
-start_label = ttk.Label(root, text='Start time of video in format 00:00:00', font=('Helvetica', 10), justify=LEFT)
-start_entry = ttk.Entry(root, textvariable=start_time, font=('Helvetica', 10), justify=LEFT, width=10)
-end_label = ttk.Label(root, text='End time of video in format 00:00:00', font=('Helvetica', 10), justify=LEFT)
-end_entry = ttk.Entry(root, textvariable=end_time, font=('Helvetica', 10), width=10, justify=LEFT)
-image_label = ttk.Label(root, textvariable=image_text, font=('Helvetica', 10), justify=LEFT)
-image_button = Button(root, text='Click to set', font=('Helvetica', 10), command=_get_thumbnail, justify=LEFT)
-resolution_label = ttk.Label(root, text='Video resolution (e.g. 1080p)', font=('Helvetica', 10), justify=LEFT)
-resolution_option = ttk.OptionMenu(root, resolution, empty_resolution[0], *empty_resolution)
-title_label = ttk.Label(root, text="Title of the video", font=('Helvetica', 10), justify=LEFT)
-title_entry = ttk.Entry(root, textvariable=title, font=('Helvetica', 10), width=20, justify=LEFT)
-
-process_button = Button(root, text='Start Processing', font=('Helvetica', 10, 'bold'), command=process_video,
-                        justify=LEFT)
-
-video_id_label.grid(sticky=W, row=1, column=0)
-video_id_entry.grid(sticky=W, row=1, column=1)
-video_information_label.grid(sticky=W, row=1, column=2)
-start_label.grid(sticky=W, row=2, column=0)
-start_entry.grid(sticky=W, row=2, column=1)
-end_label.grid(sticky=W, row=3, column=0)
-end_entry.grid(sticky=W, row=3, column=1)
-image_label.grid(sticky=W, row=4, column=0)
-image_button.grid(sticky=W, row=4, column=1)
-resolution_label.grid(sticky=W, row=5, column=0)
-resolution_option.grid(sticky=W, row=5, column=1)
-title_label.grid(sticky=W, row=6, column=0)
-title_entry.grid(sticky=W, row=6, column=1)
-process_button.grid(sticky=W, row=7, column=1)
-
-root.mainloop()
+if __name__ == "__main__":
+    vimeo_uploader = VimeoUploader()
+    vimeo_uploader.drive()
