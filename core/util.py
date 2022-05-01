@@ -41,11 +41,14 @@ def get_vimeo_configuration(config_path: str) -> VimeoConfiguration:
     with open(config_path, 'r') as file:
         config_yaml = yaml.safe_load(file)
         if 'access_token' not in config_yaml:
-            raise VimeoConfigurationException("access_token is missing from config yaml")
+            raise VimeoConfigurationException(
+                "access_token is missing from config yaml")
         if 'client_id' not in config_yaml:
-            raise VimeoConfigurationException("client_id is missing from config yaml")
+            raise VimeoConfigurationException(
+                "client_id is missing from config yaml")
         if 'client_secret' not in config_yaml:
-            raise VimeoConfigurationException("client_secret is missing from config yaml")
+            raise VimeoConfigurationException(
+                "client_secret is missing from config yaml")
 
     token = config_yaml['access_token']
     key = config_yaml['client_id']
@@ -53,8 +56,19 @@ def get_vimeo_configuration(config_path: str) -> VimeoConfiguration:
     return VimeoConfiguration(token, key, secret)
 
 
-def get_video_configuration(video_url: str, start_time: str, end_time: str, resolution: str, video_title: str,
-                            image_url: str) -> VideoConfiguration:
+def get_video_configuration(
+        video_url: str,
+        start_time: str,
+        end_time: str,
+        resolution: str,
+        video_title: str,
+        image_url: str) -> VideoConfiguration:
     start_time_in_sec = get_seconds(start_time)
     end_time_in_sec = get_seconds(end_time)
-    return VideoConfiguration(video_url, start_time_in_sec, end_time_in_sec, resolution, video_title, image_url)
+    return VideoConfiguration(
+        video_url,
+        start_time_in_sec,
+        end_time_in_sec,
+        resolution,
+        video_title,
+        image_url)

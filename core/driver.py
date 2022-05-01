@@ -23,21 +23,26 @@ from pytube.cli import on_progress
 from core.util import get_vimeo_configuration, get_video_configuration, get_youtube_url
 from model.config import VimeoConfiguration, AppDirectoryConfiguration, VideoConfiguration
 
-youtube_video_regex = "^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$"
+youtube_video_regex = "^((?:https?:)?\\/\\/)?((?:www|m)\\.)?((?:youtube(-nocookie)?\\.com|youtu.be))(\\/(?:[\\w\\-]+\\?v=|embed\\/|v\\/)?)([\\w\\-]+)(\\S+)?$"
 
-logging.basicConfig(filename='output.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(
+    filename='output.log',
+    encoding='utf-8',
+    level=logging.DEBUG)
 
 
 class Driver:
 
-    def __init__(self, vimeo_config: VimeoConfiguration, app_directory_config: AppDirectoryConfiguration) -> None:
+    def __init__(self, vimeo_config: VimeoConfiguration,
+                 app_directory_config: AppDirectoryConfiguration) -> None:
         self.vimeo_config = vimeo_config
         self.app_directory_config = app_directory_config
 
     def update_vimeo_config(self, vimeo_config: VimeoConfiguration) -> None:
         self.vimeo_config = vimeo_config
 
-    def update_app_directory_config(self, app_directory_config: AppDirectoryConfiguration) -> None:
+    def update_app_directory_config(
+            self, app_directory_config: AppDirectoryConfiguration) -> None:
         self.app_directory_config = app_directory_config
 
     def process(self, video_config: VideoConfiguration) -> None:
@@ -61,7 +66,8 @@ class Driver:
         combined_video_name = f"combined_{resolution}.mp4"
         trimmed_video_name = f"{suffix}_{resolution}.mp4"
 
-        video_dir = os.path.join(self.app_directory_config.videos_dir, video_id)
+        video_dir = os.path.join(
+            self.app_directory_config.videos_dir, video_id)
         if not os.path.exists(video_dir):
             logging.info("Creating directory " + video_dir)
             os.mkdir(video_dir)
@@ -70,30 +76,47 @@ class Driver:
         combined_video_path = os.path.join(video_dir, combined_video_name)
         trimmed_video_path = os.path.join(video_dir, trimmed_video_name)
 
-        if not os.path.exists(video_stream_path) or not os.path.exists(audio_stream_path):
-            download_youtube_resources(video_dir, url, video_stream_name, audio_stream_name, resolution)
+        if not os.path.exists(video_stream_path) or not os.path.exists(
+                audio_stream_path):
+            download_youtube_resources(
+                video_dir,
+                url,
+                video_stream_name,
+                audio_stream_name,
+                resolution)
             logging.info("Downloaded the video and audio tracks")
 
-        logging.info("Now, going to try to magically merge the video and audio with trim")
+        logging.info(
+            "Now, going to try to magically merge the video and audio with trim")
 
         # Call ffmpeg to merge.
         if not os.path.exists(combined_video_path):
-            join_resource(video_stream_path, audio_stream_path, combined_video_path)
+            join_resource(
+                video_stream_path,
+                audio_stream_path,
+                combined_video_path)
             logging.info("Finished joining the video")
 
         # Call ffmpeg to trim.
         if not os.path.exists(trimmed_video_path):
-            trim_resource(combined_video_path, trimmed_video_path, start_time_in_sec, end_time_in_sec)
+            trim_resource(
+                combined_video_path,
+                trimmed_video_path,
+                start_time_in_sec,
+                end_time_in_sec)
             logging.info("Finished trimming the video")
 
-        # Now we want to authenticate against Vimeo and upload the video with title
+        # Now we want to authenticate against Vimeo and upload the video with
+        # title
         client = vimeo.VimeoClient(
             token=self.vimeo_config.token,
             key=self.vimeo_config.key,
             secret=self.vimeo_config.secret
         )
 
-        logging.info('Uploading video to Vimeo from path: %s' % trimmed_video_path)
+        logging.info(
+            'Uploading video to Vimeo from path: %s' %
+            trimmed_video_path)
         uri = upload_video_to_vimeo(client, trimmed_video_path, title)
 
         # Activate the thumbnail image on video if passed in
@@ -107,7 +130,12 @@ class Driver:
         return
 
 
-def download_youtube_resources(download_path: str, url: str, video_name: str, audio_name: str, resolution: str) -> None:
+def download_youtube_resources(
+        download_path: str,
+        url: str,
+        video_name: str,
+        audio_name: str,
+        resolution: str) -> None:
     try:
         yt = YouTube(url, on_progress_callback=on_progress)
         video = yt.streams.filter(resolution=resolution).first()
@@ -123,11 +151,22 @@ def join_resource(video_path: str, audio_path: str, output_path: str) -> None:
     ffmpeg_merge_video_audio(video_path, audio_path, output_path)
 
 
-def trim_resource(input_path: str, output_path: str, start_time_in_sec: int, end_time_in_sec: int) -> None:
-    ffmpeg_extract_subclip(input_path, start_time_in_sec, end_time_in_sec, output_path)
+def trim_resource(
+        input_path: str,
+        output_path: str,
+        start_time_in_sec: int,
+        end_time_in_sec: int) -> None:
+    ffmpeg_extract_subclip(
+        input_path,
+        start_time_in_sec,
+        end_time_in_sec,
+        output_path)
 
 
-def upload_video_to_vimeo(client: vimeo.VimeoClient, video_path: str, video_title: str) -> str:
+def upload_video_to_vimeo(
+        client: vimeo.VimeoClient,
+        video_path: str,
+        video_title: str) -> str:
     """
     Try to upload the video to vimeo using vimeo client.
     :param client: client to upload the video with
@@ -151,25 +190,56 @@ def upload_video_to_vimeo(client: vimeo.VimeoClient, video_path: str, video_titl
         raise e
 
     video_data = client.get(uri + '?fields=transcode.status').json()
-    logging.info('The transcode status for {} is: {}'.format(uri, video_data['transcode']['status']))
+    logging.info(
+        'The transcode status for {} is: {}'.format(
+            uri, video_data['transcode']['status']))
     return uri
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument('-u', '--url', help='URL for YouTube video', required=True)
-    parser.add_argument('-s', '--start', help='Start time of video in format 00:00:00', required=True)
-    parser.add_argument('-e', '--end', help='End time of video in format 00:00:00', required=True)
-    parser.add_argument('-c', '--config', help='Path to the config required by Vimeo', required=True)
-    parser.add_argument('-i', '--image', help='Path to the thumbnail image of the video')
-    parser.add_argument('-r', '--resolution', help='Resolution of the video', default='1080p')
+    parser.add_argument(
+        '-u',
+        '--url',
+        help='URL for YouTube video',
+        required=True)
+    parser.add_argument(
+        '-s',
+        '--start',
+        help='Start time of video in format 00:00:00',
+        required=True)
+    parser.add_argument(
+        '-e',
+        '--end',
+        help='End time of video in format 00:00:00',
+        required=True)
+    parser.add_argument(
+        '-c',
+        '--config',
+        help='Path to the config required by Vimeo',
+        required=True)
+    parser.add_argument(
+        '-i',
+        '--image',
+        help='Path to the thumbnail image of the video')
+    parser.add_argument(
+        '-r',
+        '--resolution',
+        help='Resolution of the video',
+        default='1080p')
     parser.add_argument('-t', '--title', help='Title of the video')
     args = parser.parse_args()
 
     vimeo_config = get_vimeo_configuration(args.config)
 
     try:
-        video_config = get_video_configuration(args.url, args.start, args.end, args.resolution, args.title, args.image)
+        video_config = get_video_configuration(
+            args.url,
+            args.start,
+            args.end,
+            args.resolution,
+            args.title,
+            args.image)
     except Exception as e:
         logging.error("Failed with exception " % e)
         sys.exit(1)

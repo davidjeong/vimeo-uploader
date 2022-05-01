@@ -20,7 +20,12 @@ def test_download_youtube_resources_and_combine(tmpdir) -> None:
     tmp_video_path = get_absolute_path(tmpdir, 'v.mp4')
     tmp_audio_path = get_absolute_path(tmpdir, 'a.mp3')
 
-    download_youtube_resources(tmpdir, test_url, tmp_video_path, tmp_audio_path, test_resolution)
+    download_youtube_resources(
+        tmpdir,
+        test_url,
+        tmp_video_path,
+        tmp_audio_path,
+        test_resolution)
 
     assert exists(tmp_video_path)
     video = VideoFileClip(tmp_video_path)
