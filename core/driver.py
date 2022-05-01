@@ -87,8 +87,6 @@ class Driver:
             trim_resource(combined_video_path, trimmed_video_path, start_time_in_sec, end_time_in_sec)
             logging.info("Finished trimming the video")
 
-        return
-
         # Now we want to authenticate against Vimeo and upload the video with title
         client = vimeo.VimeoClient(
             token=self.vimeo_config.token,
