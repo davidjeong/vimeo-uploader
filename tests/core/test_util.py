@@ -24,16 +24,16 @@ def test_get_seconds() -> None:
     assert hour_time_and_one_second_in_sec == 60 * 60 + 1
 
 
-def test_get_absolute_path() -> None:
+def test_get_absolute_path(tmpdir) -> None:
     """
     def get_absolute_path(save_path: str, file_name: str) -> str:
     return "{}\\{}".format(save_path, file_name)
     :return:
     """
-    save_path = "\\Users\\foo\\Documents"
+    save_path = os.path.join(tmpdir, "documents")
     file_name = "bar.xyz"
     absolute_path = get_absolute_path(save_path, file_name)
-    assert absolute_path == "\\Users\\foo\\Documents\\bar.xyz"
+    assert absolute_path == os.path.join(save_path, "bar.xyz")
 
 
 def test_get_vimeo_configuration(tmpdir) -> None:
