@@ -1,2 +1,0 @@
-class VimeoConfigurationException(Exception):
-    pass

@@ -1,14 +1,17 @@
+"""
+Utility model used by application
+"""
+
 import logging
 import os
 from os.path import exists
 
 import yaml
 
-
-from core.exceptions import VimeoConfigurationException
 from model.config import VimeoConfiguration, VideoConfiguration
+from model.exception import VimeoConfigurationException
 
-url_prefix = 'https://www.youtube.com/watch?v='
+YOUTUBE_URL_PREFIX = 'https://www.youtube.com/watch?v='
 
 
 def get_seconds(time_str: str) -> int:
@@ -18,27 +21,44 @@ def get_seconds(time_str: str) -> int:
     :return: timestamp in seconds
     """
     try:
-        h, m, s = time_str.split(':')
-    except ValueError:
+        hour, minute, second = time_str.split(':')
+    except ValueError as error:
         logging.error("Failed to split the timestamp string by delimiter ':'")
-        raise ValueError('Failed to split timestamp %s' % time_str)
-    return int(h) * 3600 + int(m) * 60 + int(s)
+        raise ValueError from error
+    return int(hour) * 3600 + int(minute) * 60 + int(second)
 
 
 def get_absolute_path(save_path: str, file_name: str) -> str:
+    """
+    Get absolute path of file
+    :param save_path:
+    :param file_name:
+    :return:
+    """
     return os.path.join(save_path, file_name)
 
 
 def get_youtube_url(video_id: str) -> str:
-    return url_prefix + video_id
+    """
+    Get the absolute YouTube url
+    :param video_id:
+    :return:
+    """
+    return YOUTUBE_URL_PREFIX + video_id
 
 
 def get_vimeo_configuration(config_path: str) -> VimeoConfiguration:
+    """
+    Get the vimeo configuration from config path
+    :param config_path:
+    :return:
+    """
     file_exists = exists(config_path)
     if not file_exists:
-        raise Exception("Config file does not exist at %s", config_path)
+        raise VimeoConfigurationException(
+            f"Config file does not exist at {config_path}")
 
-    with open(config_path, 'r') as file:
+    with open(config_path, 'r', encoding="utf8") as file:
         config_yaml = yaml.safe_load(file)
         if 'access_token' not in config_yaml:
             raise VimeoConfigurationException(
@@ -63,6 +83,16 @@ def get_video_configuration(
         resolution: str,
         video_title: str,
         image_url: str) -> VideoConfiguration:
+    """
+    Get video configuration from input values
+    :param video_url:
+    :param start_time:
+    :param end_time:
+    :param resolution:
+    :param video_title:
+    :param image_url:
+    :return:
+    """
     start_time_in_sec = get_seconds(start_time)
     end_time_in_sec = get_seconds(end_time)
     return VideoConfiguration(
