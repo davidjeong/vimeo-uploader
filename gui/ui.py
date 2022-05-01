@@ -10,11 +10,10 @@ import vimeo
 from pytube import YouTube
 from pytube.exceptions import RegexMatchError
 
-from config.app_directory_configuration import AppDirectoryConfiguration
-from config.youtube_video_metadata import YoutubeVideoMetadata
 from core.driver import Driver
 from core.exceptions import VimeoConfigurationException
 from core.util import get_vimeo_configuration, get_video_configuration, get_youtube_url
+from model.config import AppDirectoryConfiguration, YoutubeVideoMetadata
 
 root = Tk()
 root.title("Vimeo Uploader")

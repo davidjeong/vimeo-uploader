@@ -19,10 +19,9 @@ from moviepy.video.io.ffmpeg_tools import ffmpeg_merge_video_audio, ffmpeg_extra
 from pytube import YouTube
 from pytube.cli import on_progress
 
-from config.app_directory_configuration import AppDirectoryConfiguration
-from config.video_configuration import VideoConfiguration
-from config.vimeo_configuration import VimeoConfiguration
+
 from core.util import get_vimeo_configuration, get_video_configuration, get_youtube_url
+from model.config import VimeoConfiguration, AppDirectoryConfiguration, VideoConfiguration
 
 youtube_video_regex = "^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$"
 

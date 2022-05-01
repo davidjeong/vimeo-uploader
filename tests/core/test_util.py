@@ -1,6 +1,5 @@
 import json
 import os
-import shutil
 
 import pytest
 
@@ -38,7 +37,7 @@ def test_get_absolute_path() -> None:
 
 
 def test_get_vimeo_configuration(tmpdir) -> None:
-    with pytest.raises(Exception, match="config file does not exist"):
+    with pytest.raises(Exception, match="Config file does not exist"):
         invalid_path = "foo/bar"
         get_vimeo_configuration(invalid_path)
 
