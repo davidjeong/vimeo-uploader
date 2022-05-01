@@ -1,5 +1,3 @@
-import os
-import shutil
 from os.path import exists
 from unittest import mock
 

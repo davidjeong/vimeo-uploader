@@ -4,9 +4,9 @@ from os.path import exists
 
 import yaml
 
-from config.video_configuration import VideoConfiguration
-from config.vimeo_configuration import VimeoConfiguration
+
 from core.exceptions import VimeoConfigurationException
+from model.config import VimeoConfiguration, VideoConfiguration
 
 url_prefix = 'https://www.youtube.com/watch?v='
 
