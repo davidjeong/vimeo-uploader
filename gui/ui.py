@@ -3,7 +3,7 @@ import os.path
 import platform
 import shutil
 import sys
-from threading import Thread
+import threading
 from tkinter import Tk, Menu, StringVar, messagebox, LEFT, W, filedialog, Button, ttk
 
 import vimeo
@@ -107,7 +107,6 @@ def disable_process_button() -> None:
 
 def process_video() -> None:
     def process():
-        disable_process_button()
         try:
             vimeo_config = get_vimeo_configuration(app_directory_config.get_vimeo_config_file_path())
             driver = Driver(vimeo_config, app_directory_config)
@@ -117,10 +116,22 @@ def process_video() -> None:
             driver.process(video_config)
         except vimeo.exceptions.VideoUploadFailure:
             messagebox.showerror('Error', 'Failed to process the video with input configuration!')
-        enable_process_button()
 
-    th = Thread(target=process())
+    disable_process_button()
+    th = threading.Thread(target=process)
     th.start()
+    _schedule_check(th)
+
+
+def _schedule_check(thread):
+    root.after(1000, _check_if_done, thread)
+
+
+def _check_if_done(thread):
+    if not thread.is_alive():
+        enable_process_button()
+    else:
+        _schedule_check(thread)
 
 
 def init() -> None:

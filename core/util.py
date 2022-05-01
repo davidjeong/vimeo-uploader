@@ -21,7 +21,7 @@ def get_seconds(time_str: str) -> int:
         h, m, s = time_str.split(':')
     except ValueError:
         logging.error("Failed to split the timestamp string by delimiter ':'")
-        raise ValueError('Failed to split timestamp ' % time_str)
+        raise ValueError('Failed to split timestamp %s' % time_str)
     return int(h) * 3600 + int(m) * 60 + int(s)
 
 
@@ -33,12 +33,12 @@ def get_youtube_url(video_id: str) -> str:
     return url_prefix + video_id
 
 
-def get_vimeo_configuration(config: str) -> VimeoConfiguration:
-    file_exists = exists(config)
+def get_vimeo_configuration(config_path: str) -> VimeoConfiguration:
+    file_exists = exists(config_path)
     if not file_exists:
-        raise Exception("config file does not exist")
+        raise Exception("Config file does not exist at %s", config_path)
 
-    with open(config, 'r') as file:
+    with open(config_path, 'r') as file:
         config_yaml = yaml.safe_load(file)
         if 'access_token' not in config_yaml:
             raise VimeoConfigurationException("access_token is missing from config yaml")
