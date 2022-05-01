@@ -1,4 +1,8 @@
 import logging
+import os.path
+import platform
+import shutil
+import sys
 from threading import Thread
 from tkinter import Tk, Menu, StringVar, messagebox, LEFT, W, filedialog, Button, ttk
 
@@ -6,19 +10,20 @@ import vimeo
 from pytube import YouTube
 from pytube.exceptions import RegexMatchError
 
+from config.app_directory_configuration import AppDirectoryConfiguration
 from config.youtube_video_metadata import YoutubeVideoMetadata
 from core.driver import Driver
-from core.util import get_vimeo_configuration, get_video_configuration
+from core.exceptions import VimeoConfigurationException
+from core.util import get_vimeo_configuration, get_video_configuration, get_youtube_url
 
 root = Tk()
-
 root.title("Vimeo Uploader")
 root.geometry('640x480')
 
-vimeo_config: str = None
 thumbnail_path: str = None
-url_prefix = 'https://www.youtube.com/watch?v='
 empty_resolution = ['N/A']
+app_directory_name = "Vimeo Uploader"
+app_directory_config: AppDirectoryConfiguration = None
 
 
 def _about() -> None:
@@ -26,10 +31,13 @@ def _about() -> None:
                                  'and re-upload to Vimeo.')
 
 
-def _import_config_json() -> None:
-    global vimeo_config
-    filename = filedialog.askopenfilename(title='Select config file', filetypes=[('Config files', '*.json')])
-    vimeo_config = filename
+def _import_config_yaml() -> None:
+    filename = filedialog.askopenfilename(title='Select config file', filetypes=[('Config files', '*.yaml')])
+    try:
+        get_vimeo_configuration(filename)
+        shutil.copy(filename, app_directory_config.get_vimeo_config_file_path())
+    except VimeoConfigurationException:
+        logging.error("Config file is not valid format")
 
 
 def _get_thumbnail() -> None:
@@ -67,7 +75,7 @@ def _get_video_metadata(video_id: str) -> None:
     new_video_resolutions = set()
     new_video_metadata = None
     try:
-        video = YouTube(url_prefix + video_id)
+        video = YouTube(get_youtube_url(video_id))
         new_video_metadata = YoutubeVideoMetadata(video.video_id, video.title, video.author, video.length,
                                                   video.publish_date)
         logging.info(f"Video metadata: {video.video_id}, {video.title}, {video.author}, {video.length}, "
@@ -75,7 +83,7 @@ def _get_video_metadata(video_id: str) -> None:
         for stream in video.streams:
             new_video_resolutions.add(stream.resolution)
     except RegexMatchError as e:
-        logging.warning(e)
+        logging.debug(e)
     if new_video_metadata is None:
         video_resolutions = ['N/A']
         video_metadata = None
@@ -101,9 +109,9 @@ def process_video() -> None:
     def process():
         disable_process_button()
         try:
-            config = get_vimeo_configuration(vimeo_config)
-            driver = Driver(config)
-            video_config = get_video_configuration(url_prefix + video_id_str.get(), start_time.get().strip(),
+            vimeo_config = get_vimeo_configuration(app_directory_config.get_vimeo_config_file_path())
+            driver = Driver(vimeo_config, app_directory_config)
+            video_config = get_video_configuration(video_id_str.get(), start_time.get().strip(),
                                                    end_time.get().strip(),
                                                    resolution.get(), title.get(), thumbnail_path)
             driver.process(video_config)
@@ -115,10 +123,41 @@ def process_video() -> None:
     th.start()
 
 
+def init() -> None:
+    """
+    Initialize the environment folders and configuration files
+    :return: None
+    """
+    ops = platform.system()
+    if ops == 'Windows':
+        documents_folder = 'My Documents'
+    elif ops == 'Darwin':
+        documents_folder = 'Documents'
+    else:
+        logging.info("Running on unsupported os " + ops)
+        sys.exit(1)
+    root_dir = os.path.join(os.path.expanduser('~'), documents_folder, app_directory_name)
+    if not os.path.exists(root_dir):
+        logging.info("Creating dir under " + root_dir)
+        os.mkdir(root_dir)
+    video_root_dir = os.path.join(root_dir, 'videos')
+    if not os.path.exists(video_root_dir):
+        logging.info("Creating video dir under " + video_root_dir)
+        os.mkdir(video_root_dir)
+    configs_root_dir = os.path.join(root_dir, 'configs')
+    if not os.path.exists(configs_root_dir):
+        logging.info("Creating configs dir under " + configs_root_dir)
+        os.mkdir(configs_root_dir)
+    global app_directory_config
+    app_directory_config = AppDirectoryConfiguration(root_dir, video_root_dir, configs_root_dir)
+
+
+init()
+
 menubar = Menu(root, background='#ff8000', foreground='black', activebackground='white', activeforeground='black')
 file = Menu(menubar, tearoff=1)
 file.add_command(label='About', command=_about)
-file.add_command(label='Import config', command=_import_config_json)
+file.add_command(label='Import config', command=_import_config_yaml)
 file.add_command(label='Quit', command=root.quit)
 menubar.add_cascade(label='File', menu=file)
 
@@ -134,7 +173,7 @@ image_text.set("Path to thumbnail image (optional)")
 resolution = StringVar()
 title = StringVar()
 
-video_id_label = ttk.Label(root, text='Supplied link: ' + url_prefix, font=('Helvetica', 10), justify=LEFT)
+video_id_label = ttk.Label(root, text='Video ID', font=('Helvetica', 10), justify=LEFT)
 video_id_entry = ttk.Entry(root, textvariable=video_id_str, font=('Helvetica', 10), width=15, justify=LEFT)
 video_information_label = ttk.Label(root, text='', font=('Helvetica', 10), justify=LEFT)
 start_label = ttk.Label(root, text='Start time of video in format 00:00:00', font=('Helvetica', 10), justify=LEFT)
