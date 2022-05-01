@@ -10,10 +10,7 @@ This is the script to
 import argparse
 import logging
 import os.path
-import re
 import sys
-import tempfile
-import time
 from datetime import date
 
 import pytube
@@ -25,7 +22,7 @@ from pytube.cli import on_progress
 from config.app_directory_configuration import AppDirectoryConfiguration
 from config.video_configuration import VideoConfiguration
 from config.vimeo_configuration import VimeoConfiguration
-from core.util import get_absolute_path, get_vimeo_configuration, get_video_configuration, get_seconds, get_youtube_url
+from core.util import get_vimeo_configuration, get_video_configuration, get_youtube_url
 
 youtube_video_regex = "^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$"
 
@@ -89,6 +86,8 @@ class Driver:
         if not os.path.exists(trimmed_video_path):
             trim_resource(combined_video_path, trimmed_video_path, start_time_in_sec, end_time_in_sec)
             logging.info("Finished trimming the video")
+
+        return
 
         # Now we want to authenticate against Vimeo and upload the video with title
         client = vimeo.VimeoClient(
