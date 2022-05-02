@@ -188,6 +188,8 @@ class VimeoUploader:
             shutil.copy(
                 filename,
                 self.app_directory_config.get_vimeo_config_file_path())
+        except PermissionError:
+            logging.error("Permission error to read or copy the file")
         except VimeoConfigurationException:
             logging.error("Config file is not valid format")
 
@@ -255,6 +257,9 @@ class VimeoUploader:
         self.title_entry.grid(sticky=W, row=6, column=1)
         self.process_button.grid(sticky=W, row=7, column=1)
 
+        # most forms disabled by default
+        self._disable_all_forms()
+
         self.root.mainloop()
 
     def _process_video(self) -> None:
@@ -280,12 +285,24 @@ class VimeoUploader:
         thread.start()
         self._schedule_check(thread)
 
+    def _enable_all_forms(self) -> None:
+        self.start_entry['state'] = 'enabled'
+        self.end_entry['state'] = 'enabled'
+        self.image_button['state'] = 'active'
+        self.title_entry['state'] = 'enabled'
+        self.process_button['state'] = 'active'
+
+    def _disable_all_forms(self) -> None:
+        self.start_entry['state'] = 'disabled'
+        self.end_entry['state'] = 'disabled'
+        self.image_button['state'] = 'disabled'
+        self.title_entry['state'] = 'disabled'
+        self.process_button['state'] = 'disabled'
+
     def _get_video_metadata(self, video_id: str) -> None:
         video_id = video_id.get()
-        video_resolutions = []
-        video_metadata = None
 
-        def _update_video_resolution_dropdown() -> None:
+        def _update_video_resolution_dropdown(video_resolutions: list) -> None:
             self.resolution_option["menu"].delete(0, "end")
             for item in video_resolutions:
                 self.resolution_option["menu"].add_command(
@@ -294,11 +311,25 @@ class VimeoUploader:
                 )
             self.resolution.set(video_resolutions[-1])
 
-        def _update_video_information() -> None:
+        def _update_video_information(video_metadata: YoutubeVideoMetadata) -> None:
             if video_metadata is not None:
                 info_dump = f"Title: {video.title[0:20]}...\nAuthor: {video.author}\nLength: {video.length} " \
                             f"seconds\nPublish Date: {video.publish_date}"
-                messagebox.showinfo('Video Information', info_dump)
+                select = messagebox.askyesno('Video select pop-up', f'Use video with information below?\n{info_dump}')
+                if select:
+                    self._enable_all_forms()
+                    if video_metadata is None:
+                        video_resolutions = ['N/A']
+                    else:
+                        video_resolutions = sorted(
+                            [res for res in new_video_resolutions if res], key=_get_resolution_sort_key)
+                    _update_video_resolution_dropdown(video_resolutions)
+                    return
+                else:
+                    self.video_id_str.set("")
+            video_resolutions = ['N/A']
+            _update_video_resolution_dropdown(video_resolutions)
+            self._disable_all_forms()
 
         def _get_resolution_sort_key(res: str) -> int:
             return int(res[:-1])
@@ -324,16 +355,7 @@ class VimeoUploader:
                 new_video_resolutions.add(stream.resolution)
         except RegexMatchError as error:
             logging.debug(error)
-        if new_video_metadata is None:
-            video_resolutions = ['N/A']
-            video_metadata = None
-        else:
-            # Update video resolutions
-            video_resolutions = sorted(
-                [res for res in new_video_resolutions if res], key=_get_resolution_sort_key)
-            video_metadata = new_video_metadata
-        _update_video_information()
-        _update_video_resolution_dropdown()
+        _update_video_information(new_video_metadata)
 
 
 if __name__ == "__main__":
