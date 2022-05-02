@@ -277,7 +277,7 @@ class VimeoUploader:
                 driver.process(video_config)
                 messagebox.showinfo(
                     "Upload status",
-                    f"Finished uploading video with ID {video_config.video_id}")
+                    f"Finished uploading video to Vimeo for YouTube video with ID [{video_config.video_id}]")
             except vimeo.exceptions.VideoUploadFailure:
                 messagebox.showerror(
                     'Error', 'Failed to process the video with input configuration!')

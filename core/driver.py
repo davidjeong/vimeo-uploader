@@ -13,9 +13,9 @@ import os.path
 import sys
 from datetime import date
 
+import ffmpeg
 import pytube
 import vimeo
-from moviepy.video.io.ffmpeg_tools import ffmpeg_merge_video_audio, ffmpeg_extract_subclip
 from pytube import YouTube
 from pytube.cli import on_progress
 
@@ -183,7 +183,9 @@ def join_resource(video_path: str, audio_path: str, output_path: str) -> None:
     :param output_path:
     :return:
     """
-    ffmpeg_merge_video_audio(video_path, audio_path, output_path)
+    input_video = ffmpeg.input(video_path)
+    input_audio = ffmpeg.input(audio_path)
+    ffmpeg.output(input_video, input_audio, output_path, vcodec='copy').run()
 
 
 def trim_resource(
@@ -199,11 +201,14 @@ def trim_resource(
     :param end_time_in_sec:
     :return:
     """
-    ffmpeg_extract_subclip(
-        input_path,
-        start_time_in_sec,
-        end_time_in_sec,
-        output_path)
+    input_video = ffmpeg.input(input_path)
+    ffmpeg.output(
+        input_video,
+        output_path,
+        ss=start_time_in_sec,
+        t=end_time_in_sec,
+        vcodec='copy',
+        acodec='copy').run()
 
 
 def upload_video_to_vimeo(
