@@ -299,6 +299,13 @@ class VimeoUploader:
         self.title_entry['state'] = 'disabled'
         self.process_button['state'] = 'disabled'
 
+    def _clear_all_forms(self) -> None:
+        self.start_time.set("")
+        self.end_time.set("")
+        self.image_text.set("Path to thumbnail image (optional)")
+        self.thumbnail_handler.thumbnail_path = ""
+        self.title.set("")
+
     def _get_video_metadata(self, video_id: str) -> None:
         video_id = video_id.get()
 
@@ -313,7 +320,7 @@ class VimeoUploader:
 
         def _update_video_information(video_metadata: YoutubeVideoMetadata) -> None:
             if video_metadata is not None:
-                info_dump = f"Title: {video.title[0:20]}...\nAuthor: {video.author}\nLength: {video.length} " \
+                info_dump = f"Title: {video.title}...\nAuthor: {video.author}\nLength: {video.length} " \
                             f"seconds\nPublish Date: {video.publish_date}"
                 select = messagebox.askyesno('Video select pop-up', f'Use video with information below?\n{info_dump}')
                 if select:
@@ -327,7 +334,17 @@ class VimeoUploader:
                     return
                 else:
                     self.video_id_str.set("")
+<<<<<<< Updated upstream
             video_resolutions = ['N/A']
+=======
+                    video_resolutions = ['N/A']
+                    self.video_id_str.set(None)
+                    self._disable_all_forms()
+            else:
+                video_resolutions = ['N/A']
+                self._clear_all_forms()
+                self._disable_all_forms()
+>>>>>>> Stashed changes
             _update_video_resolution_dropdown(video_resolutions)
             self._disable_all_forms()
 
