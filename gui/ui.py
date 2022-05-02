@@ -13,13 +13,12 @@ from tkinter import Tk, Menu, StringVar, messagebox, LEFT, W, filedialog, Button
 
 import vimeo
 from pytube import YouTube
-from pytube.exceptions import RegexMatchError
+from pytube.exceptions import RegexMatchError, VideoUnavailable
 
 from core.driver import Driver
 from core.util import get_vimeo_configuration, get_video_configuration, get_youtube_url
 from model.config import AppDirectoryConfiguration, YoutubeVideoMetadata
 from model.exception import VimeoConfigurationException
-
 
 EMPTY_RESOLUTION = ['N/A']
 APP_DIRECTORY_NAME = "Vimeo Uploader"
@@ -276,6 +275,9 @@ class VimeoUploader:
                     self.title.get(),
                     self.thumbnail_handler.thumbnail_path)
                 driver.process(video_config)
+                messagebox.showinfo(
+                    "Upload status",
+                    f"Finished uploading video with ID {video_config.video_id}")
             except vimeo.exceptions.VideoUploadFailure:
                 messagebox.showerror(
                     'Error', 'Failed to process the video with input configuration!')
@@ -311,25 +313,25 @@ class VimeoUploader:
                 )
             self.resolution.set(video_resolutions[-1])
 
-        def _update_video_information(video_metadata: YoutubeVideoMetadata) -> None:
+        def _update_video_information(
+                video_metadata: YoutubeVideoMetadata) -> None:
             if video_metadata is not None:
                 info_dump = f"Title: {video.title[0:20]}...\nAuthor: {video.author}\nLength: {video.length} " \
                             f"seconds\nPublish Date: {video.publish_date}"
-                select = messagebox.askyesno('Video select pop-up', f'Use video with information below?\n{info_dump}')
+                select = messagebox.askyesno(
+                    'Video select pop-up',
+                    f'Use video with information below?\n\n{info_dump}')
                 if select:
                     self._enable_all_forms()
-                    if video_metadata is None:
-                        video_resolutions = ['N/A']
-                    else:
-                        video_resolutions = sorted(
-                            [res for res in new_video_resolutions if res], key=_get_resolution_sort_key)
-                    _update_video_resolution_dropdown(video_resolutions)
-                    return
+                    video_resolutions = sorted(
+                        [res for res in new_video_resolutions if res], key=_get_resolution_sort_key)
                 else:
+                    video_resolutions = ['N/A']
                     self.video_id_str.set("")
-            video_resolutions = ['N/A']
+                    self._disable_all_forms()
+            else:
+                video_resolutions = ['N/A']
             _update_video_resolution_dropdown(video_resolutions)
-            self._disable_all_forms()
 
         def _get_resolution_sort_key(res: str) -> int:
             return int(res[:-1])
@@ -353,6 +355,8 @@ class VimeoUploader:
                 video.publish_date)
             for stream in video.streams:
                 new_video_resolutions.add(stream.resolution)
+        except VideoUnavailable as error:
+            logging.warning(error)
         except RegexMatchError as error:
             logging.debug(error)
         _update_video_information(new_video_metadata)
