@@ -16,9 +16,10 @@ from pytube import YouTube
 from pytube.exceptions import RegexMatchError, VideoUnavailable
 
 from core.driver import Driver
-from core.util import get_vimeo_configuration, get_video_configuration, get_youtube_url
-from model.config import AppDirectoryConfiguration, YoutubeVideoMetadata
-from model.exception import VimeoConfigurationException
+from core.streaming_service import SupportedServices
+from core.util import get_vimeo_client_configuration, get_video_configuration
+from model.config import AppDirectoryConfiguration, VideoMetadata
+from model.exception import VimeoClientConfigurationException
 
 EMPTY_RESOLUTION = ['N/A']
 APP_DIRECTORY_NAME = "Vimeo Uploader"
@@ -45,9 +46,21 @@ class VimeoUploader:
     """
 
     def __init__(self):
-        self.root = Tk()
+        self.driver = Driver()
         self.thumbnail_handler = ThumbnailHandler()
         self.app_directory_config = self._initialize_directories()
+        self.driver.update_app_directory_config(self.app_directory_config)
+        self.driver.update_vimeo_client_config(
+            get_vimeo_client_configuration(
+                self.app_directory_config.get_vimeo_config_file_path()))
+
+        self.input_service: SupportedServices = SupportedServices.YOUTUBE
+        self.output_service: SupportedServices = SupportedServices.VIMEO
+
+        self.driver.update_download_service(self.input_service)
+        self.driver.update_upload_service(self.output_service)
+
+        self.root = Tk()
         # String Var
         self.video_id_str = StringVar()
         self.video_information_str = StringVar()
@@ -137,7 +150,7 @@ class VimeoUploader:
             command=self._process_video,
             justify=LEFT)
 
-    def _get_thumbnail(self) -> str:
+    def _get_thumbnail(self) -> None:
         new_thumbnail_path = filedialog.askopenfilename(
             title='Select image file', filetypes=[
                 ('All Images', ('*.jpg', '*.png'))])
@@ -178,18 +191,20 @@ class VimeoUploader:
         return AppDirectoryConfiguration(
             root_dir, video_root_dir, configs_root_dir)
 
-    def _import_config_yaml(self) -> None:
+    def _import_vimeo_client_config_yaml(self) -> None:
         filename = filedialog.askopenfilename(
-            title='Select config file', filetypes=[
+            title='Select config file for Vimeo client', filetypes=[
                 ('Config files', '*.yaml')])
         try:
-            get_vimeo_configuration(filename)
+            self.driver.update_vimeo_client_config(
+                get_vimeo_client_configuration(filename))
+            # Copy the file over to target config path
             shutil.copy(
                 filename,
                 self.app_directory_config.get_vimeo_config_file_path())
         except PermissionError:
             logging.error("Permission error to read or copy the file")
-        except VimeoConfigurationException:
+        except VimeoClientConfigurationException:
             logging.error("Config file is not valid format")
 
     def _enable_process_button(self) -> None:
@@ -226,8 +241,8 @@ class VimeoUploader:
         file = Menu(menubar, tearoff=1)
         file.add_command(label='About', command=_about)
         file.add_command(
-            label='Import config',
-            command=self._import_config_yaml)
+            label='Import vimeo client config file',
+            command=self._import_vimeo_client_config_yaml)
         file.add_command(label='Quit', command=self.root.quit)
         menubar.add_cascade(label='File', menu=file)
 
@@ -237,7 +252,8 @@ class VimeoUploader:
             lambda name,
             index,
             mode,
-            video_id=self.video_id_str: self._get_video_metadata(video_id))
+            video_id=self.video_id_str: self._get_video_metadata(
+                video_id.get()))
 
         self.image_text.set("Path to thumbnail image (optional)")
 
@@ -264,9 +280,8 @@ class VimeoUploader:
     def _process_video(self) -> None:
         def process():
             try:
-                vimeo_config = get_vimeo_configuration(
+                vimeo_client_config = get_vimeo_client_configuration(
                     self.app_directory_config.get_vimeo_config_file_path())
-                driver = Driver(vimeo_config, self.app_directory_config)
                 video_config = get_video_configuration(
                     self.video_id_str.get(),
                     self.start_time.get().strip(),
@@ -274,7 +289,8 @@ class VimeoUploader:
                     self.resolution.get(),
                     self.title.get(),
                     self.thumbnail_handler.thumbnail_path)
-                driver.process(video_config)
+                self.driver.update_vimeo_client_config(vimeo_client_config)
+                self.driver.process(video_config)
                 messagebox.showinfo(
                     "Upload status",
                     f"Finished uploading video to Vimeo for YouTube video with ID [{video_config.video_id}]")
@@ -309,7 +325,6 @@ class VimeoUploader:
         self.title.set("")
 
     def _get_video_metadata(self, video_id: str) -> None:
-        video_id = video_id.get()
 
         def _update_video_resolution_dropdown(video_resolutions: list) -> None:
             self.resolution_option["menu"].delete(0, "end")
@@ -320,55 +335,38 @@ class VimeoUploader:
                 )
             self.resolution.set(video_resolutions[-1])
 
-        def _update_video_information(
-                video_metadata: YoutubeVideoMetadata) -> None:
-            if video_metadata is not None:
-                info_dump = f"Title: {video.title}...\nAuthor: {video.author}\nLength: {video.length} " \
-                            f"seconds\nPublish Date: {video.publish_date}"
-                select = messagebox.askyesno(
+        def _process_video_information() -> bool:
+            if video_metadata is None:
+                return False
+            else:
+                info_dump = f"Title: {video_metadata.title}...\nAuthor: {video_metadata.author}\nLength: {video_metadata.length_in_sec} " \
+                            f"seconds\nPublish Date: {video_metadata.publish_date}"
+                return messagebox.askyesno(
                     'Video select pop-up',
                     f'Use video with information below?\n\n{info_dump}')
-                if select:
-                    self._enable_all_forms()
-                    video_resolutions = sorted(
-                        [res for res in new_video_resolutions if res], key=_get_resolution_sort_key)
-                else:
-                    video_resolutions = ['N/A']
-                    self.video_id_str.set("")
-                    self._disable_all_forms()
+
+        def _get_resolution_sort_key(res: str) -> int:
+            return int(res[:-1])
+
+        proceed = False
+        try:
+            video_metadata = self.driver.get_video_metadata(
+                self.input_service, video_id)
+            proceed = _process_video_information()
+        except VideoUnavailable as error:
+            logging.warning(error)
+        except RegexMatchError as error:
+            logging.debug(error)
+        finally:
+            if proceed:
+                video_resolutions = sorted(
+                    [res for res in video_metadata.resolutions if res], key=_get_resolution_sort_key)
+                self._enable_all_forms()
             else:
                 video_resolutions = ['N/A']
                 self._clear_all_forms()
                 self._disable_all_forms()
             _update_video_resolution_dropdown(video_resolutions)
-
-        def _get_resolution_sort_key(res: str) -> int:
-            return int(res[:-1])
-
-        new_video_resolutions = set()
-        new_video_metadata = None
-        try:
-            video = YouTube(get_youtube_url(video_id))
-            new_video_metadata = YoutubeVideoMetadata(
-                video.video_id,
-                video.title,
-                video.author,
-                video.length,
-                video.publish_date)
-            logging.info(
-                "Video metadata: %s, %s, %s, %s, %s",
-                video.video_id,
-                video.title,
-                video.author,
-                video.length,
-                video.publish_date)
-            for stream in video.streams:
-                new_video_resolutions.add(stream.resolution)
-        except VideoUnavailable as error:
-            logging.warning(error)
-        except RegexMatchError as error:
-            logging.debug(error)
-        _update_video_information(new_video_metadata)
 
 
 if __name__ == "__main__":

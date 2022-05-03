@@ -3,15 +3,12 @@ Utility model used by application
 """
 
 import logging
-import os
 from os.path import exists
 
 import yaml
 
-from model.config import VimeoConfiguration, VideoConfiguration
-from model.exception import VimeoConfigurationException
-
-YOUTUBE_URL_PREFIX = 'https://www.youtube.com/watch?v='
+from model.config import VimeoClientConfiguration, VideoConfiguration
+from model.exception import VimeoClientConfigurationException, UnsetConfigurationException
 
 
 def get_seconds(time_str: str) -> int:
@@ -28,26 +25,8 @@ def get_seconds(time_str: str) -> int:
     return int(hour) * 3600 + int(minute) * 60 + int(second)
 
 
-def get_absolute_path(save_path: str, file_name: str) -> str:
-    """
-    Get absolute path of file
-    :param save_path:
-    :param file_name:
-    :return:
-    """
-    return os.path.join(save_path, file_name)
-
-
-def get_youtube_url(video_id: str) -> str:
-    """
-    Get the absolute YouTube url
-    :param video_id:
-    :return:
-    """
-    return YOUTUBE_URL_PREFIX + video_id
-
-
-def get_vimeo_configuration(config_path: str) -> VimeoConfiguration:
+def get_vimeo_client_configuration(
+        config_path: str) -> VimeoClientConfiguration:
     """
     Get the vimeo configuration from config path
     :param config_path:
@@ -55,25 +34,25 @@ def get_vimeo_configuration(config_path: str) -> VimeoConfiguration:
     """
     file_exists = exists(config_path)
     if not file_exists:
-        raise VimeoConfigurationException(
+        raise UnsetConfigurationException(
             f"Config file does not exist at {config_path}")
 
     with open(config_path, 'r', encoding="utf8") as file:
         config_yaml = yaml.safe_load(file)
         if 'access_token' not in config_yaml:
-            raise VimeoConfigurationException(
+            raise VimeoClientConfigurationException(
                 "access_token is missing from config yaml")
         if 'client_id' not in config_yaml:
-            raise VimeoConfigurationException(
+            raise VimeoClientConfigurationException(
                 "client_id is missing from config yaml")
         if 'client_secret' not in config_yaml:
-            raise VimeoConfigurationException(
+            raise VimeoClientConfigurationException(
                 "client_secret is missing from config yaml")
 
     token = config_yaml['access_token']
     key = config_yaml['client_id']
     secret = config_yaml['client_secret']
-    return VimeoConfiguration(token, key, secret)
+    return VimeoClientConfiguration(token, key, secret)
 
 
 def get_video_configuration(

@@ -39,9 +39,9 @@ class VideoConfiguration:
 
 
 @dataclass
-class VimeoConfiguration:
+class VimeoClientConfiguration:
     """
-    Data object for vimeo configuration
+    Data object for vimeo client configuration
     """
     token: str
     key: str
@@ -49,12 +49,13 @@ class VimeoConfiguration:
 
 
 @dataclass
-class YoutubeVideoMetadata:
+class VideoMetadata:
     """
-    Data object for YouTube video metadata
+    Data object for Video metadata
     """
     video_id: str
     title: str
     author: str
     length_in_sec: int
     publish_date: str
+    resolutions: set
