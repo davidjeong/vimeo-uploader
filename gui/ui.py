@@ -12,14 +12,13 @@ from dataclasses import dataclass
 from tkinter import Tk, Menu, StringVar, messagebox, LEFT, W, filedialog, Button, ttk
 
 import vimeo
-from pytube import YouTube
 from pytube.exceptions import RegexMatchError, VideoUnavailable
 
 from core.driver import Driver
 from core.streaming_service import SupportedServices
 from core.util import get_vimeo_client_configuration, get_video_configuration
-from model.config import AppDirectoryConfiguration, VideoMetadata
-from model.exception import VimeoClientConfigurationException
+from model.config import AppDirectoryConfiguration
+from model.exception import VimeoClientConfigurationException, UnsetConfigurationException
 
 EMPTY_RESOLUTION = ['N/A']
 APP_DIRECTORY_NAME = "Vimeo Uploader"
@@ -28,8 +27,8 @@ APP_DIRECTORY_NAME = "Vimeo Uploader"
 def _about() -> None:
     messagebox.showinfo(
         'About',
-        'This is a python-based application to download youtube videos, trim them, '
-        'and re-upload to Vimeo.')
+        'This is a python-based application to download videos from supported streaming services, trim them, '
+        'and re-upload to supported streaming services.')
 
 
 @dataclass
@@ -46,6 +45,7 @@ class VimeoUploader:
     """
 
     def __init__(self):
+
         self.driver = Driver()
         self.thumbnail_handler = ThumbnailHandler()
         self.app_directory_config = self._initialize_directories()
@@ -60,6 +60,7 @@ class VimeoUploader:
         self.driver.update_download_service(self.input_service)
         self.driver.update_upload_service(self.output_service)
 
+        # Root element
         self.root = Tk()
         # String Var
         self.video_id_str = StringVar()
@@ -69,7 +70,6 @@ class VimeoUploader:
         self.image_text = StringVar()
         self.resolution = StringVar()
         self.title = StringVar()
-        # Root element
 
         self.video_id_label = ttk.Label(
             self.root, text='Video ID', font=(
@@ -193,8 +193,7 @@ class VimeoUploader:
 
     def _import_vimeo_client_config_yaml(self) -> None:
         filename = filedialog.askopenfilename(
-            title='Select config file for Vimeo client', filetypes=[
-                ('Config files', '*.yaml')])
+            title='Select config file for Vimeo client', filetypes=[('Vimeo config files', '*.bin')])
         try:
             self.driver.update_vimeo_client_config(
                 get_vimeo_client_configuration(filename))
@@ -202,6 +201,8 @@ class VimeoUploader:
             shutil.copy(
                 filename,
                 self.app_directory_config.get_vimeo_config_file_path())
+        except UnsetConfigurationException:
+            logging.warning("Configuration path is not set")
         except PermissionError:
             logging.error("Permission error to read or copy the file")
         except VimeoClientConfigurationException:
@@ -238,13 +239,28 @@ class VimeoUploader:
             foreground='black',
             activebackground='white',
             activeforeground='black')
-        file = Menu(menubar, tearoff=1)
+        file = Menu(menubar, tearoff=0)
         file.add_command(label='About', command=_about)
-        file.add_command(
-            label='Import vimeo client config file',
-            command=self._import_vimeo_client_config_yaml)
         file.add_command(label='Quit', command=self.root.quit)
+
+        input_video_source = Menu(menubar, tearoff=0)
+        input_video_source.add_checkbutton(label='YouTube')
+        input_video_source.add_checkbutton(label='Vimeo')
+
+        output_video_source = Menu(menubar, tearoff=0)
+        output_video_source.add_checkbutton(label='YouTube')
+        output_video_source.add_checkbutton(label='Vimeo')
+
+        source = Menu(menubar, tearoff=0)
+        source.add_cascade(label='Input Video Service', menu=input_video_source)
+        source.add_cascade(label='Output Video Service', menu=output_video_source)
+        source.add_separator()
+        source.add_command(
+            label='Import Vimeo Config',
+            command=self._import_vimeo_client_config_yaml)
+
         menubar.add_cascade(label='File', menu=file)
+        menubar.add_cascade(label='Service Configuration', menu=source)
 
         self.root.config(menu=menubar)
         self.video_id_str.trace(
@@ -326,7 +342,7 @@ class VimeoUploader:
 
     def _get_video_metadata(self, video_id: str) -> None:
 
-        def _update_video_resolution_dropdown(video_resolutions: list) -> None:
+        def _update_video_resolution_dropdown() -> None:
             self.resolution_option["menu"].delete(0, "end")
             for item in video_resolutions:
                 self.resolution_option["menu"].add_command(

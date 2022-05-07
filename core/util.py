@@ -6,6 +6,7 @@ import logging
 from os.path import exists
 
 import yaml
+from cryptography.fernet import Fernet
 
 from model.config import VimeoClientConfiguration, VideoConfiguration
 from model.exception import VimeoClientConfigurationException, UnsetConfigurationException
@@ -27,6 +28,19 @@ def get_seconds(time_str: str) -> int:
 
 def get_vimeo_client_configuration(
         config_path: str) -> VimeoClientConfiguration:
+
+    fernet_key = b'Km4yTNxHkrj3PXsnB0PnbTqpU79CWk0JUbTI8GlqNYQ='  # ideally this should reside in AWS secret manager
+    fernet = Fernet(fernet_key)
+
+    def _decrypt_binary() -> bytes:
+        """
+        Decrypt the config binary
+        :return: Decrypt the config binary
+        """
+        with open(config_path, 'rb') as encrypted_file:
+            encrypted = encrypted_file.read()
+        return fernet.decrypt(encrypted)
+
     """
     Get the vimeo configuration from config path
     :param config_path:
@@ -37,17 +51,17 @@ def get_vimeo_client_configuration(
         raise UnsetConfigurationException(
             f"Config file does not exist at {config_path}")
 
-    with open(config_path, 'r', encoding="utf8") as file:
-        config_yaml = yaml.safe_load(file)
-        if 'access_token' not in config_yaml:
-            raise VimeoClientConfigurationException(
-                "access_token is missing from config yaml")
-        if 'client_id' not in config_yaml:
-            raise VimeoClientConfigurationException(
-                "client_id is missing from config yaml")
-        if 'client_secret' not in config_yaml:
-            raise VimeoClientConfigurationException(
-                "client_secret is missing from config yaml")
+    binary = _decrypt_binary()
+    config_yaml = yaml.safe_load(binary)
+    if 'access_token' not in config_yaml:
+        raise VimeoClientConfigurationException(
+            "access_token is missing from config yaml")
+    if 'client_id' not in config_yaml:
+        raise VimeoClientConfigurationException(
+            "client_id is missing from config yaml")
+    if 'client_secret' not in config_yaml:
+        raise VimeoClientConfigurationException(
+            "client_secret is missing from config yaml")
 
     token = config_yaml['access_token']
     key = config_yaml['client_id']
