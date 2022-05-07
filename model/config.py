@@ -5,7 +5,7 @@ Contains all data objects used by application
 import os
 from dataclasses import dataclass
 
-VIDEO_CONFIG_FILE_NAME = 'vimeo_config.yaml'
+VIDEO_CONFIG_FILE_NAME = 'vimeo_config.bin'
 
 
 @dataclass
