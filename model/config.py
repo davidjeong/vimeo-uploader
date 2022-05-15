@@ -5,7 +5,7 @@ Contains all data objects used by application
 import os
 from dataclasses import dataclass
 
-VIDEO_CONFIG_FILE_NAME = 'vimeo_config.bin'
+VIMEO_CONFIG_FILE_NAME = 'vimeo_config.bin'
 
 
 @dataclass
@@ -22,7 +22,7 @@ class AppDirectoryConfiguration:
         Get the vimeo config file path
         :return:
         """
-        return os.path.join(self.config_dir, VIDEO_CONFIG_FILE_NAME)
+        return os.path.join(self.config_dir, VIMEO_CONFIG_FILE_NAME)
 
 
 @dataclass
