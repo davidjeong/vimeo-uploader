@@ -29,7 +29,8 @@ def get_seconds(time_str: str) -> int:
 def get_vimeo_client_configuration(
         config_path: str) -> VimeoClientConfiguration:
 
-    fernet_key = b'Km4yTNxHkrj3PXsnB0PnbTqpU79CWk0JUbTI8GlqNYQ='  # ideally this should reside in AWS secret manager
+    # ideally this should reside in AWS secret manager
+    fernet_key = b'Km4yTNxHkrj3PXsnB0PnbTqpU79CWk0JUbTI8GlqNYQ='
     fernet = Fernet(fernet_key)
 
     def _decrypt_binary() -> bytes:

@@ -193,7 +193,8 @@ class VimeoUploader:
 
     def _import_vimeo_client_config_yaml(self) -> None:
         filename = filedialog.askopenfilename(
-            title='Select config file for Vimeo client', filetypes=[('Vimeo config files', '*.bin')])
+            title='Select config file for Vimeo client', filetypes=[
+                ('Vimeo config files', '*.bin')])
         try:
             self.driver.update_vimeo_client_config(
                 get_vimeo_client_configuration(filename))
@@ -252,8 +253,12 @@ class VimeoUploader:
         output_video_source.add_checkbutton(label='Vimeo')
 
         source = Menu(menubar, tearoff=0)
-        source.add_cascade(label='Input Video Service', menu=input_video_source)
-        source.add_cascade(label='Output Video Service', menu=output_video_source)
+        source.add_cascade(
+            label='Input Video Service',
+            menu=input_video_source)
+        source.add_cascade(
+            label='Output Video Service',
+            menu=output_video_source)
         source.add_separator()
         source.add_command(
             label='Import Vimeo Config',
