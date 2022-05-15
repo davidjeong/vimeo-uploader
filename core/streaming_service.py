@@ -141,7 +141,7 @@ class YouTubeService(StreamingService):
 
     @staticmethod
     def _get_audio_stream_file_name() -> str:
-        return f"audio_stream.mp3"
+        return "audio_stream.mp3"
 
 
 class VimeoService(StreamingService):

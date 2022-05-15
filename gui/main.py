@@ -360,7 +360,8 @@ class VimeoUploader:
             if video_metadata is None:
                 return False
             else:
-                info_dump = f"Title: {video_metadata.title}...\nAuthor: {video_metadata.author}\nLength: {video_metadata.length_in_sec} " \
+                info_dump = f"Title: {video_metadata.title}...\nAuthor: {video_metadata.author}\n" \
+                            f"Length: {video_metadata.length_in_sec} " \
                             f"seconds\nPublish Date: {video_metadata.publish_date}"
                 return messagebox.askyesno(
                     'Video select pop-up',

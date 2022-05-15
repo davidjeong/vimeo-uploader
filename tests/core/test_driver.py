@@ -2,7 +2,6 @@ import os
 from os.path import exists
 from unittest import mock
 
-import pytest
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from mutagen.mp4 import MP4
 
