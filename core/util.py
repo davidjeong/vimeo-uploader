@@ -12,6 +12,9 @@ from model.config import VimeoClientConfiguration, VideoConfiguration
 from model.exception import VimeoClientConfigurationException, UnsetConfigurationException
 
 
+FERNET_KEY = b'Km4yTNxHkrj3PXsnB0PnbTqpU79CWk0JUbTI8GlqNYQ='
+
+
 def get_seconds(time_str: str) -> int:
     """
     Get seconds from timestamp string.
@@ -30,8 +33,7 @@ def get_vimeo_client_configuration(
         config_path: str) -> VimeoClientConfiguration:
 
     # ideally this should reside in AWS secret manager
-    fernet_key = b'Km4yTNxHkrj3PXsnB0PnbTqpU79CWk0JUbTI8GlqNYQ='
-    fernet = Fernet(fernet_key)
+    fernet = Fernet(FERNET_KEY)
 
     def _decrypt_binary() -> bytes:
         """
