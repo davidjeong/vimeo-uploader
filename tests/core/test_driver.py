@@ -10,7 +10,6 @@ from core.driver import trim_resource
 from core.streaming_service import YouTubeService, VimeoService
 
 
-@pytest.mark.skip(reason="Need to install ffmpeg on test worker")
 def test_download_youtube_resources_and_combine(tmpdir) -> None:
 
     service = YouTubeService()
