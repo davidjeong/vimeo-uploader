@@ -388,7 +388,7 @@ class VimeoUploader:
                 video_resolutions = ['N/A']
                 self._clear_all_forms()
                 self._disable_all_forms()
-            _update_video_resolution_dropdown(video_resolutions)
+            _update_video_resolution_dropdown()
 
 
 if __name__ == "__main__":
