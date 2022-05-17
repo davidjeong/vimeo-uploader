@@ -216,8 +216,16 @@ def main() -> None:
         logging.error("Failed with exception %s", error)
         sys.exit(1)
 
-    driver = Driver(vimeo_config, None)
-    driver.process(video_config)
+    driver = Driver()
+    driver.update_download_service(SupportedServices.YOUTUBE)
+    driver.update_upload_service(SupportedServices.VIMEO)
+    driver.update_vimeo_client_config(vimeo_config)
+
+    try:
+        driver.process(video_config)
+    except vimeo.exceptions.VideoUploadFailure as error:
+        logging.error("Failed with exception %s", error)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
