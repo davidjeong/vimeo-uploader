@@ -200,14 +200,14 @@ class VimeoService(StreamingService):
                 error)
             raise error
 
-        video_data = vimeo_client.get(f"{url}?fields=transcode.status").json
-        logging.info("The transcode status for %s is %s",
-                     url, video_data['transcode']['status'])
-
         # Set the thumbnail image on video if exists
         if url is not None and thumbnail_image_path:
             vimeo_client.upload_picture(
                 url, thumbnail_image_path, activate=True)
+
+        video_data = vimeo_client.get(f"{url}?fields=transcode.status").json
+        logging.info("The transcode status for %s is %s",
+                     url, video_data['transcode']['status'])
 
         return True
 
