@@ -206,8 +206,7 @@ class VimeoService(StreamingService):
                 url, thumbnail_image_path, activate=True)
 
         video_data = vimeo_client.get(f"{url}?fields=transcode.status").json
-        logging.info("The transcode status for %s is %s",
-                     url, video_data['transcode']['status'])
+        logging.info("The transcode status for %s is %s", url, video_data)
 
         return True
 

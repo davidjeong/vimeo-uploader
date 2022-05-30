@@ -159,7 +159,7 @@ def trim_resource(
         input_video,
         output_path,
         ss=start_time_in_sec,
-        t=end_time_in_sec,
+        to=end_time_in_sec,
         vcodec='copy',
         acodec='copy').run()
 
