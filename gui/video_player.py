@@ -28,6 +28,8 @@ Date: 23-09-2015
 __version__ = '20.05.04'  # mrJean1 at Gmail
 
 # import external libraries
+from tkinter.font import BOLD
+
 import vlc
 # import standard libraries
 import sys
@@ -154,6 +156,12 @@ class _Tk_Menu(Tk.Menu):
                 self._shortcuts_widget.bind(key, kwds["command"])
 
 
+class Interactor(Tk.Frame):
+
+    def __init__(self, parent):
+        Tk.Frame.__init__(self, parent)
+
+
 class Player(Tk.Frame):
     """The main window has to deal with events.
     """
@@ -203,9 +211,6 @@ class Player(Tk.Frame):
         self.buttons_panel.title("")
         self.is_buttons_panel_anchor_active = False
 
-        self.input_panel = Tk.Toplevel(self.parent)
-        self.input_panel.title("Input panel")
-
         buttons = ttk.Frame(self.buttons_panel)
         self.playButton = ttk.Button(buttons, text="Play", command=self.OnPlay)
         stop = ttk.Button(buttons, text="Stop", command=self.OnStop)
@@ -245,6 +250,30 @@ class Player(Tk.Frame):
         self.timeSlider.pack(side=Tk.BOTTOM, fill=Tk.X, expand=1)
         self.timeSliderUpdate = time.time()
         timers.pack(side=Tk.BOTTOM, fill=Tk.X)
+
+        # Current Timestamp
+        timestamp = ttk.Frame(self.buttons_panel)
+        self.current_timestamp_var = Tk.StringVar()
+        self.current_timestamp_var.set("00:00:00")
+        self.current_timestamp_label = ttk.Label(
+            timestamp,
+            text='Current Timestamp - ',
+            font=(
+                'Helvetica',
+                12,
+                BOLD))
+        self.current_timestamp_label.pack(side=Tk.LEFT)
+
+        self.current_timestamp_entry = ttk.Label(
+            timestamp,
+            text="00:00:00",
+            textvariable=self.current_timestamp_var,
+            font=(
+                'Helvetica',
+                12,
+                BOLD))
+        self.current_timestamp_entry.pack(side=Tk.LEFT)
+        timestamp.pack(side=Tk.TOP, fill=Tk.X)
 
         # VLC player
         args = []
@@ -291,6 +320,18 @@ class Player(Tk.Frame):
         self._AnchorButtonsPanel()
 
         self.OnTick()  # set the timer up
+        self.OnUpdate()  # set the timestamp updater up
+
+    def OnUpdate(self):
+        """
+        Update the timestamp every 10ms
+        """
+        if self.player.get_time() == -1:
+            self.current_timestamp_var.set("00:00:00")
+        else:
+            self.current_timestamp_var.set(
+                self.format_time(self.player.get_time()))
+        self.parent.after(10, self.OnUpdate)
 
     def OnClose(self, *unused):
         """Closes the window and quit.
@@ -474,6 +515,19 @@ class Player(Tk.Frame):
         # [h264 @ 0x7f84fb061200] decode_slice_header error
         # [h264 @ 0x7f84fb061200] no frame!
 
+    @staticmethod
+    def format_time(millis):
+        seconds = int((millis / 1000) % 60)
+        if seconds < 10:
+            seconds = "0{}".format(seconds)
+        minutes = int((millis / (1000 * 60)) % 60)
+        if minutes < 10:
+            minutes = "0{}".format(minutes)
+        hours = int((millis / (1000 * 60 * 60)) % 24)
+        if hours < 10:
+            hours = "0{}".format(hours)
+        return "{}:{}:{}".format(hours, minutes, seconds)
+
     def OnTick(self):
         """Timer tick, update the time slider to the video time.
         """
@@ -498,6 +552,7 @@ class Player(Tk.Frame):
             self.OnResize()
 
     def OnTime(self, *unused):
+
         if self.player:
             t = self.timeVar.get()
             if self.timeSliderLast != int(t):
@@ -520,7 +575,6 @@ class Player(Tk.Frame):
                 # updating the slider again (so the timer doesn't start
                 # fighting with the user).
                 self.player.set_time(int(t * 1e3))  # milliseconds
-                print(self.player.get_time())
                 self.timeSliderUpdate = time.time()
 
     def OnVolume(self, *unused):
@@ -584,6 +638,7 @@ if __name__ == "__main__":
     # Create a Tk.App() to handle the windowing event loop
     root = Tk.Tk()
     player = Player(root, video=_video)
+    interactor = Interactor(root)
     # XXX unnecessary (on macOS)
     root.protocol("WM_DELETE_WINDOW", player.OnClose)
     root.mainloop()
