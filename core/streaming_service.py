@@ -1,5 +1,6 @@
 import logging
 import os
+import webbrowser
 from abc import ABC, abstractmethod
 from enum import Enum
 
@@ -205,8 +206,12 @@ class VimeoService(StreamingService):
             vimeo_client.upload_picture(
                 url, thumbnail_image_path, activate=True)
 
-        video_data = vimeo_client.get(f"{url}?fields=transcode.status").json
-        logging.info("The transcode status for %s is %s", url, video_data)
+        video_data = vimeo_client.get(url + '?fields=link').json()
+        video_url = video_data['link']
+        logging.info("Video link is %s", video_url)
+
+        # Open the url in browser, if possible
+        webbrowser.open_new(video_url)
 
         return True
 
