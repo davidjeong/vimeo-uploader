@@ -10,17 +10,18 @@ This is the script to
 import argparse
 import logging
 import os.path
+import subprocess
 import sys
-from datetime import date
 
 import ffmpeg
 import pytube
 import vimeo
 
-from core.streaming_service import YouTubeService, VimeoService, StreamingService, SupportedServices
-from core.util import get_vimeo_client_configuration, get_video_configuration
-from model.config import VimeoClientConfiguration, AppDirectoryConfiguration, VideoConfiguration, VideoMetadata
-from model.exception import UnsetConfigurationException
+from core.streaming_service import YouTubeService, VimeoService, SupportedServices
+from core.util import get_vimeo_client_configuration
+from model.config import VimeoClientConfiguration, AppDirectoryConfiguration, VideoMetadata, VideoDownloadConfiguration, \
+    VideoTrimUploadConfiguration
+from model.exception import UnsetConfigurationException, VideoDownloadFailedException
 
 logging.basicConfig(
     filename='output.log',
@@ -64,10 +65,10 @@ class Driver:
         """
         self.app_directory_config = app_directory_config
 
-    def update_download_service(self, download_service: StreamingService):
+    def update_download_service(self, download_service: SupportedServices):
         self.download_service = download_service
 
-    def update_upload_service(self, upload_service: StreamingService):
+    def update_upload_service(self, upload_service: SupportedServices):
         self.upload_service = upload_service
 
     def get_video_metadata(
@@ -83,11 +84,13 @@ class Driver:
         return self.streaming_services[video_service].get_video_metadata(
             video_id)
 
-    def process(self, video_config: VideoConfiguration) -> None:
+    def download(
+            self,
+            video_download_config: VideoDownloadConfiguration) -> str:
         """
-        Process the video with input video configuration
-        :param video_config:
-        :return
+        Download the video with input video configuration
+        :param video_download_config:
+        :return Combined video path
         """
         if self.app_directory_config is None:
             raise UnsetConfigurationException(
@@ -97,21 +100,10 @@ class Driver:
             raise UnsetConfigurationException(
                 "Download service or upload service is not set")
 
-        video_id = video_config.video_id
-        start_time_in_sec = video_config.start_time_in_sec
-        end_time_in_sec = video_config.end_time_in_sec
-        image = video_config.image_url
-        resolution = video_config.resolution
-        title = video_config.video_title
+        video_id = video_download_config.video_id
+        resolution = video_download_config.resolution
 
-        if title is None or not title:
-            today = date.today()
-            current_date = today.strftime("%m/%d/%y")
-            title = f"(CW) {current_date}"
-
-        suffix = f"{str(video_config.start_time_in_sec)}_{str(video_config.end_time_in_sec)}"
         combined_video_name = f"combined_{resolution}.mp4"
-        trimmed_video_name = f"{suffix}_{resolution}.mp4"
 
         download_path = os.path.join(
             self.app_directory_config.videos_dir, video_id)
@@ -119,49 +111,76 @@ class Driver:
             logging.info("Creating directory %s", download_path)
             os.mkdir(download_path)
         combined_video_path = os.path.join(download_path, combined_video_name)
-        trimmed_video_path = os.path.join(download_path, trimmed_video_name)
 
         self.streaming_services[self.download_service].download_video(
             video_id, resolution, download_path, combined_video_name)
 
+        if os.path.exists(combined_video_path):
+            subprocess.Popen(["python", os.path.join(os.path.dirname(
+                os.path.abspath(__file__)), "../gui/video_player.py"), combined_video_path])
+        else:
+            raise VideoDownloadFailedException(
+                f"Failed to download video with id {video_id} and resolution {resolution}")
+
+        return combined_video_path
+
+    def trim_resource(
+            self,
+            video_trim_upload_config: VideoTrimUploadConfiguration) -> str:
+        """
+        Trim the resource based on start and end time in seconds
+        :param video_trim_upload_config
+        :return: Trimmed video path
+        """
+        video_id = video_trim_upload_config.video_id
+        input_path = video_trim_upload_config.video_path
+        start_time_in_sec = video_trim_upload_config.start_time_in_sec
+        end_time_in_sec = video_trim_upload_config.end_time_in_sec
+
+        if self.app_directory_config is None:
+            raise UnsetConfigurationException(
+                "App directory config is not set")
+
+        trimmed_path = os.path.join(
+            self.app_directory_config.videos_dir, video_id)
+
+        suffix = f"{str(start_time_in_sec)}_{str(end_time_in_sec)}"
+        trimmed_video_name = f"{suffix}.mp4"
+        trimmed_video_path = os.path.join(trimmed_path, trimmed_video_name)
+
         # Call ffmpeg to trim.
         if not os.path.exists(trimmed_video_path):
-            trim_resource(
-                combined_video_path,
+            input_video = ffmpeg.input(input_path)
+            ffmpeg.output(
+                input_video,
                 trimmed_video_path,
-                start_time_in_sec,
-                end_time_in_sec)
+                ss=start_time_in_sec,
+                to=end_time_in_sec,
+                vcodec='copy',
+                acodec='copy').run()
             logging.info("Finished trimming the video")
 
+        # Return trimmed video path
+        return trimmed_video_path
+
+    def upload_video(
+            self,
+            video_path: str,
+            video_title: str,
+            image: str) -> None:
+        """
+        Uploads the video to using upload service
+        :param video_path:
+        :param video_title:
+        :param image:
+        :return:
+        """
         logging.info(
             'Uploading video to upload service from path: %s',
-            trimmed_video_path)
+            video_path)
 
         self.streaming_services[self.upload_service].upload_video(
-            trimmed_video_path, title, image)
-
-
-def trim_resource(
-        input_path: str,
-        output_path: str,
-        start_time_in_sec: int,
-        end_time_in_sec: int) -> None:
-    """
-    Trim the resource based on start and end time in seconds
-    :param input_path:
-    :param output_path:
-    :param start_time_in_sec:
-    :param end_time_in_sec:
-    :return:
-    """
-    input_video = ffmpeg.input(input_path)
-    ffmpeg.output(
-        input_video,
-        output_path,
-        ss=start_time_in_sec,
-        to=end_time_in_sec,
-        vcodec='copy',
-        acodec='copy').run()
+            video_path, video_title, image)
 
 
 def main() -> None:
@@ -171,9 +190,9 @@ def main() -> None:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-u',
-        '--url',
-        help='URL for YouTube video',
+        '-v',
+        '--video_id',
+        help='ID for YouTube video',
         required=True)
     parser.add_argument(
         '-s',
@@ -205,13 +224,8 @@ def main() -> None:
     vimeo_config = get_vimeo_client_configuration(args.config)
 
     try:
-        video_config = get_video_configuration(
-            args.url,
-            args.start,
-            args.end,
-            args.resolution,
-            args.title,
-            args.image)
+        video_config = VideoDownloadConfiguration(
+            args.video_id, args.resolution)
     except (pytube.exceptions.PytubeError, vimeo.exceptions.VideoUploadFailure) as error:
         logging.error("Failed with exception %s", error)
         sys.exit(1)

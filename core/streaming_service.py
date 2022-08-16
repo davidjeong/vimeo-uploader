@@ -2,6 +2,7 @@ import logging
 import os
 import webbrowser
 from abc import ABC, abstractmethod
+from datetime import datetime
 from enum import Enum
 
 import ffmpeg
@@ -166,6 +167,7 @@ class VimeoService(StreamingService):
     def upload_video(self, video_path: str, video_title: str,
                      thumbnail_image_path: str = None) -> bool:
         # First check if client config is set, otherwise raise exception
+        return
         if self.client_config is None:
             raise VimeoClientConfigurationException(
                 "Vimeo client configuration is not set")

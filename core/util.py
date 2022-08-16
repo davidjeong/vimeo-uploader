@@ -8,7 +8,7 @@ from os.path import exists
 import yaml
 from cryptography.fernet import Fernet
 
-from model.config import VimeoClientConfiguration, VideoConfiguration
+from model.config import VimeoClientConfiguration, VideoTrimUploadConfiguration
 from model.exception import VimeoClientConfigurationException, UnsetConfigurationException
 
 
@@ -72,29 +72,30 @@ def get_vimeo_client_configuration(
     return VimeoClientConfiguration(token, key, secret)
 
 
-def get_video_configuration(
-        video_url: str,
+def get_video_trim_upload_configuration(
+        video_id: str,
+        video_path: str,
         start_time: str,
         end_time: str,
-        resolution: str,
         video_title: str,
-        image_url: str) -> VideoConfiguration:
+        image_url: str) -> VideoTrimUploadConfiguration:
     """
-    Get video configuration from input values
-    :param video_url:
+    Get video trim upload configuration from input values
+    :param video_id
+    :param video_path:
     :param start_time:
     :param end_time:
-    :param resolution:
     :param video_title:
     :param image_url:
     :return:
     """
     start_time_in_sec = get_seconds(start_time)
     end_time_in_sec = get_seconds(end_time)
-    return VideoConfiguration(
-        video_url,
+    return VideoTrimUploadConfiguration(
+        video_id,
+        video_path,
         start_time_in_sec,
         end_time_in_sec,
-        resolution,
         video_title,
-        image_url)
+        image_url
+    )

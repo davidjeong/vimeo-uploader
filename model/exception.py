@@ -9,6 +9,12 @@ class UnsetConfigurationException(Exception):
     """
 
 
+class VideoDownloadFailedException(Exception):
+    """
+    Exception object for errors related to download
+    """
+
+
 class VimeoClientConfigurationException(Exception):
     """
     Exception object for errors related to Vimeo client configuration
