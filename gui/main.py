@@ -6,8 +6,10 @@ import logging
 import os.path
 import platform
 import shutil
+import subprocess
 import sys
 import threading
+import webbrowser
 from dataclasses import dataclass
 from tkinter import Tk, Menu, StringVar, messagebox, LEFT, W, filedialog, Button, ttk, BooleanVar, Frame, Toplevel, \
     BOTTOM, X
@@ -183,6 +185,7 @@ class PostDownloadProcessor:
                 video_trim_upload_config = get_video_trim_upload_configuration(
                     self.video_id,
                     self.video_path,
+                    self.resolution,
                     self.start_time.get().strip(),
                     self.end_time.get().strip(),
                     self.title.get(),
@@ -190,10 +193,12 @@ class PostDownloadProcessor:
                 driver.update_vimeo_client_config(vimeo_client_config)
                 download_video_path = driver.trim_resource(
                     video_trim_upload_config)
-                driver.upload_video(
+                video_url = driver.upload_video(
                     download_video_path,
                     video_trim_upload_config.video_title,
                     video_trim_upload_config.image_url)
+                # Open the url in browser, if possible
+                webbrowser.open_new(video_url)
                 messagebox.showinfo(
                     "Upload status",
                     f"Finished uploading video to Vimeo for YouTube video with ID [{video_trim_upload_config.video_id}]")
@@ -245,10 +250,11 @@ def _download_video() -> None:
             video_download_config = VideoDownloadConfiguration(
                 video_id_str.get(), resolution.get())
             download_video_path = driver.download(video_download_config)
-            # messagebox.showinfo(
-            #     "Upload status",
-            # f"Finished uploading video to Vimeo for YouTube video with ID
-            # [{video_download_config.video_id}]")
+            subprocess.Popen(["python", os.path.join(os.path.dirname(
+                os.path.abspath(__file__)), "../gui/video_player.py"), download_video_path])
+            logging.info(
+                "Finished uploading video to Vimeo for YouTube video with ID %s",
+                video_download_config.video_id)
             PostDownloadProcessor(download_video_path)
         except vimeo.exceptions.VideoUploadFailure:
             messagebox.showerror(

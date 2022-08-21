@@ -42,6 +42,7 @@ class VideoTrimUploadConfiguration:
     """
     video_id: str
     video_path: str
+    video_resolution: str
     start_time_in_sec: int
     end_time_in_sec: int
     video_title: str = None

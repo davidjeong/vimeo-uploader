@@ -10,7 +10,6 @@ This is the script to
 import argparse
 import logging
 import os.path
-import subprocess
 import sys
 
 import ffmpeg
@@ -112,15 +111,12 @@ class Driver:
             os.mkdir(download_path)
         combined_video_path = os.path.join(download_path, combined_video_name)
 
-        self.streaming_services[self.download_service].download_video(
-            video_id, resolution, download_path, combined_video_name)
-
-        if os.path.exists(combined_video_path):
-            subprocess.Popen(["python", os.path.join(os.path.dirname(
-                os.path.abspath(__file__)), "../gui/video_player.py"), combined_video_path])
-        else:
+        try:
+            self.streaming_services[self.download_service].download_video(
+                video_id, resolution, download_path, combined_video_name)
+        except Exception as error:
             raise VideoDownloadFailedException(
-                f"Failed to download video with id {video_id} and resolution {resolution}")
+                f"Failed to download video with id {video_id} and resolution {resolution} with error {error}")
 
         return combined_video_path
 
@@ -133,6 +129,7 @@ class Driver:
         :return: Trimmed video path
         """
         video_id = video_trim_upload_config.video_id
+        video_resolution = video_trim_upload_config.video_resolution
         input_path = video_trim_upload_config.video_path
         start_time_in_sec = video_trim_upload_config.start_time_in_sec
         end_time_in_sec = video_trim_upload_config.end_time_in_sec
@@ -144,8 +141,8 @@ class Driver:
         trimmed_path = os.path.join(
             self.app_directory_config.videos_dir, video_id)
 
-        suffix = f"{str(start_time_in_sec)}_{str(end_time_in_sec)}"
-        trimmed_video_name = f"{suffix}.mp4"
+        prefix = f"{str(start_time_in_sec)}_{str(end_time_in_sec)}_{video_resolution}"
+        trimmed_video_name = f"{prefix}.mp4"
         trimmed_video_path = os.path.join(trimmed_path, trimmed_video_name)
 
         # Call ffmpeg to trim.
@@ -167,19 +164,19 @@ class Driver:
             self,
             video_path: str,
             video_title: str,
-            image: str) -> None:
+            image: str) -> str:
         """
         Uploads the video to using upload service
         :param video_path:
         :param video_title:
         :param image:
-        :return:
+        :return: Url of the uploaded video
         """
         logging.info(
             'Uploading video to upload service from path: %s',
             video_path)
 
-        self.streaming_services[self.upload_service].upload_video(
+        return self.streaming_services[self.upload_service].upload_video(
             video_path, video_title, image)
 
 

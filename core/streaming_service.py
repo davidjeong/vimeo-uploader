@@ -1,8 +1,6 @@
 import logging
 import os
-import webbrowser
 from abc import ABC, abstractmethod
-from datetime import datetime
 from enum import Enum
 
 import ffmpeg
@@ -47,7 +45,7 @@ class StreamingService(ABC):
         :param resolution: Resolution for the video (e.g. 1080p, 1440p)
         :param download_path: Absolute path to the output destination folder
         :param output_file_name: Name of the output video file
-        :return: Boolean flag representing whether the video completed downloading
+        :return: URL of the uploaded video
         """
         pass
 
@@ -59,7 +57,7 @@ class StreamingService(ABC):
         :param video_path: Absolute path to the video
         :param video_title: Title of the uploaded video
         :param thumbnail_image_path: Absolute path to the thumbnail image
-        :return: Boolean flag representing whether the video uploaded successfully
+        :return: URL of the uploaded video
         """
         pass
 
@@ -129,7 +127,7 @@ class YouTubeService(StreamingService):
             self,
             video_path: str,
             video_title: str,
-            thumbnail_image_path: str = None) -> bool:
+            thumbnail_image_path: str = None) -> str:
         raise NotImplementedError(
             "This operation is not yet implemented for YouTubeService.")
 
@@ -165,7 +163,7 @@ class VimeoService(StreamingService):
             "This operation is not yet implemented for VimeoService")
 
     def upload_video(self, video_path: str, video_title: str,
-                     thumbnail_image_path: str = None) -> bool:
+                     thumbnail_image_path: str = None) -> str:
         # First check if client config is set, otherwise raise exception
         return
         if self.client_config is None:
@@ -212,10 +210,7 @@ class VimeoService(StreamingService):
         video_url = video_data['link']
         logging.info("Video link is %s", video_url)
 
-        # Open the url in browser, if possible
-        webbrowser.open_new(video_url)
-
-        return True
+        return video_url
 
     def update_client_config(self, client_config: VimeoClientConfiguration):
         self.client_config = client_config

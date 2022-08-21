@@ -75,6 +75,7 @@ def get_vimeo_client_configuration(
 def get_video_trim_upload_configuration(
         video_id: str,
         video_path: str,
+        video_resolution: str,
         start_time: str,
         end_time: str,
         video_title: str,
@@ -83,6 +84,7 @@ def get_video_trim_upload_configuration(
     Get video trim upload configuration from input values
     :param video_id
     :param video_path:
+    :param video_resolution:
     :param start_time:
     :param end_time:
     :param video_title:
@@ -94,6 +96,7 @@ def get_video_trim_upload_configuration(
     return VideoTrimUploadConfiguration(
         video_id,
         video_path,
+        video_resolution,
         start_time_in_sec,
         end_time_in_sec,
         video_title,
