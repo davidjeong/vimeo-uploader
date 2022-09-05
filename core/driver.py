@@ -11,6 +11,7 @@ import argparse
 import logging
 import os.path
 import sys
+import webbrowser
 from datetime import date
 
 import ffmpeg
@@ -64,10 +65,10 @@ class Driver:
         """
         self.app_directory_config = app_directory_config
 
-    def update_download_service(self, download_service: StreamingService):
+    def update_download_service(self, download_service: SupportedServices):
         self.download_service = download_service
 
-    def update_upload_service(self, upload_service: StreamingService):
+    def update_upload_service(self, upload_service: SupportedServices):
         self.upload_service = upload_service
 
     def get_video_metadata(
@@ -109,7 +110,7 @@ class Driver:
             current_date = today.strftime("%m/%d/%y")
             title = f"(CW) {current_date}"
 
-        suffix = f"{str(video_config.start_time_in_sec)}_{str(video_config.end_time_in_sec)}"
+        suffix = f"{str(video_config.start_time_in_sec)}_{str(video_config.end_time_in_sec)}_{video_config.resolution}"
         combined_video_name = f"combined_{resolution}.mp4"
         trimmed_video_name = f"{suffix}_{resolution}.mp4"
 
@@ -137,8 +138,11 @@ class Driver:
             'Uploading video to upload service from path: %s',
             trimmed_video_path)
 
-        self.streaming_services[self.upload_service].upload_video(
+        video_url = self.streaming_services[self.upload_service].upload_video(
             trimmed_video_path, title, image)
+
+        # Open the url in browser, if possible
+        webbrowser.open_new(video_url)
 
 
 def trim_resource(

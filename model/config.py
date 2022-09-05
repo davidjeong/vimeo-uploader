@@ -4,6 +4,7 @@ Contains all data objects used by application
 
 import os
 from dataclasses import dataclass
+from datetime import datetime
 
 VIMEO_CONFIG_FILE_NAME = 'vimeo_config.bin'
 
@@ -57,5 +58,5 @@ class VideoMetadata:
     title: str
     author: str
     length_in_sec: int
-    publish_date: str
+    publish_date: datetime
     resolutions: set
