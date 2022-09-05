@@ -1,6 +1,5 @@
 import logging
 import os
-import webbrowser
 from abc import ABC, abstractmethod
 from enum import Enum
 
@@ -52,13 +51,13 @@ class StreamingService(ABC):
 
     @abstractmethod
     def upload_video(self, video_path: str, video_title: str,
-                     thumbnail_image_path: str = None) -> bool:
+                     thumbnail_image_path: str = None) -> str:
         """
         Upload the video to streaming service.
         :param video_path: Absolute path to the video
         :param video_title: Title of the uploaded video
         :param thumbnail_image_path: Absolute path to the thumbnail image
-        :return: Boolean flag representing whether the video uploaded successfully
+        :return: URL of the uploaded video
         """
         pass
 
@@ -117,6 +116,10 @@ class YouTubeService(StreamingService):
         # Combine the two streams into one using FFMPEG
         input_video_stream = ffmpeg.input(absolute_video_stream_path)
         input_audio_stream = ffmpeg.input(absolute_audio_stream_path)
+        if os.path.exists(absolute_output_path):
+            logging.info("Combined file already exists")
+            return True
+
         ffmpeg.output(
             input_video_stream,
             input_audio_stream,
@@ -128,7 +131,7 @@ class YouTubeService(StreamingService):
             self,
             video_path: str,
             video_title: str,
-            thumbnail_image_path: str = None) -> bool:
+            thumbnail_image_path: str = None) -> str:
         raise NotImplementedError(
             "This operation is not yet implemented for YouTubeService.")
 
@@ -164,7 +167,7 @@ class VimeoService(StreamingService):
             "This operation is not yet implemented for VimeoService")
 
     def upload_video(self, video_path: str, video_title: str,
-                     thumbnail_image_path: str = None) -> bool:
+                     thumbnail_image_path: str = None) -> str:
         # First check if client config is set, otherwise raise exception
         if self.client_config is None:
             raise VimeoClientConfigurationException(
@@ -184,7 +187,7 @@ class VimeoService(StreamingService):
             vimeo_client: vimeo.VimeoClient,
             video_path: str,
             video_title: str,
-            thumbnail_image_path: str = None) -> bool:
+            thumbnail_image_path: str = None) -> str:
         # Try uploading the video using Vimeo client
         try:
             url = vimeo_client.upload(video_path, data={
@@ -209,11 +212,7 @@ class VimeoService(StreamingService):
         video_data = vimeo_client.get(url + '?fields=link').json()
         video_url = video_data['link']
         logging.info("Video link is %s", video_url)
-
-        # Open the url in browser, if possible
-        webbrowser.open_new(video_url)
-
-        return True
+        return video_url
 
     def update_client_config(self, client_config: VimeoClientConfiguration):
         self.client_config = client_config

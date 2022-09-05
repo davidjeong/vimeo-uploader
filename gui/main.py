@@ -148,6 +148,21 @@ def _check_if_done(thread):
         _schedule_check(thread)
 
 
+def _check_if_requirements_met() -> None:
+    """
+    Check if requirements to run the uploader is satisfied
+    :return:
+    """
+    ffmpeg_exists = shutil.which("ffmpeg") is not None
+    if not ffmpeg_exists:
+        logging.info("User does not have FFmpeg installed")
+        messagebox.showerror(
+            'Error',
+            'System requirements are not met. FFmpeg is required to be downloaded for the application to run.\n'
+            'Please download from https://ffmpeg.org/')
+        sys.exit(1)
+
+
 def _enable_all_forms() -> None:
     start_entry['state'] = 'enabled'
     end_entry['state'] = 'enabled'
@@ -182,13 +197,20 @@ def _get_video_metadata(video_id: str) -> None:
             )
         resolution.set(video_resolutions[-1])
 
+    def format_time(seconds):
+        minutes, seconds = divmod(seconds, 60)
+        hours, minutes = divmod(minutes, 60)
+        return f"{hours} hour(s) {minutes} minute(s) {seconds} second(s)"
+
     def _process_video_information() -> bool:
         if video_metadata is None:
             return False
         else:
+            date_format = "%Y-%m-%d"
             info_dump = f"Title: {video_metadata.title}...\nAuthor: {video_metadata.author}\n" \
+                        f"Length: {format_time(video_metadata.length_in_sec)}\n" \
                         f"Length: {video_metadata.length_in_sec} " \
-                        f"seconds\nPublish Date: {video_metadata.publish_date}"
+                        f"Publish Date: {video_metadata.publish_date.strftime(date_format)}"
             return messagebox.askyesno(
                 'Video select pop-up',
                 f'Use video with information below?\n\n{info_dump}')
@@ -216,6 +238,8 @@ def _get_video_metadata(video_id: str) -> None:
             _disable_all_forms()
         _update_video_resolution_dropdown()
 
+
+_check_if_requirements_met()
 
 driver = Driver()
 thumbnail_handler = ThumbnailHandler()
