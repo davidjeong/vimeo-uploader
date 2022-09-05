@@ -156,6 +156,12 @@ class _Tk_Menu(Tk.Menu):
                 self._shortcuts_widget.bind(key, kwds["command"])
 
 
+class Interactor(Tk.Frame):
+
+    def __init__(self, parent):
+        Tk.Frame.__init__(self, parent)
+
+
 class Player(Tk.Frame):
     """The main window has to deal with events.
     """
@@ -520,7 +526,7 @@ class Player(Tk.Frame):
         hours = int((millis / (1000 * 60 * 60)) % 24)
         if hours < 10:
             hours = "0{}".format(hours)
-        return f"{hours}:{minutes}:{seconds}"
+        return "{}:{}:{}".format(hours, minutes, seconds)
 
     def OnTick(self):
         """Timer tick, update the time slider to the video time.
@@ -632,6 +638,7 @@ if __name__ == "__main__":
     # Create a Tk.App() to handle the windowing event loop
     root = Tk.Tk()
     player = Player(root, video=_video)
+    interactor = Interactor(root)
     # XXX unnecessary (on macOS)
     root.protocol("WM_DELETE_WINDOW", player.OnClose)
     root.mainloop()
