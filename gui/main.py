@@ -398,9 +398,9 @@ root.config(menu=menubar)
 video_id_str.trace(
     "w",
     lambda name,
-           index,
-           mode,
-           video_id=video_id_str: _get_video_metadata(
+    index,
+    mode,
+    video_id=video_id_str: _get_video_metadata(
         video_id.get()))
 
 image_text.set("Path to thumbnail image (optional)")
