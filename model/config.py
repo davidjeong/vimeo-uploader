@@ -37,6 +37,7 @@ class VideoConfiguration:
     resolution: str
     video_title: str = None
     image_url: str = None
+    download_only: bool = False
 
 
 @dataclass
