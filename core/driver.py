@@ -10,6 +10,7 @@ This is the script to
 import argparse
 import logging
 import os.path
+import platform
 import sys
 import webbrowser
 from datetime import date
@@ -18,7 +19,7 @@ import ffmpeg
 import pytube
 import vimeo
 
-from core.streaming_service import YouTubeService, VimeoService, StreamingService, SupportedServices
+from core.streaming_service import YouTubeService, VimeoService, SupportedServices
 from core.util import get_vimeo_client_configuration, get_video_configuration
 from model.config import VimeoClientConfiguration, AppDirectoryConfiguration, VideoConfiguration, VideoMetadata
 from model.exception import UnsetConfigurationException
@@ -27,6 +28,8 @@ logging.basicConfig(
     filename='output.log',
     encoding='utf-8',
     level=logging.INFO)
+
+APP_DIRECTORY_NAME = "Vimeo Uploader"
 
 
 class Driver:
@@ -104,6 +107,7 @@ class Driver:
         image = video_config.image_url
         resolution = video_config.resolution
         title = video_config.video_title
+        download_only = video_config.download_only
 
         if title is None or not title:
             today = date.today()
@@ -125,6 +129,10 @@ class Driver:
         self.streaming_services[self.download_service].download_video(
             video_id, resolution, download_path, combined_video_name)
 
+        if download_only:
+            logging.info("Finished downloading the video")
+            return
+
         # Call ffmpeg to trim.
         if not os.path.exists(trimmed_video_path):
             trim_resource(
@@ -143,6 +151,38 @@ class Driver:
 
         # Open the url in browser, if possible
         webbrowser.open_new(video_url)
+
+
+def initialize_directories() -> AppDirectoryConfiguration:
+    """
+    Initialize the environment folders and configuration files
+    :return: None
+    """
+    ops = platform.system()
+    if ops == 'Windows':
+        documents_folder = 'My Documents'
+    elif ops == 'Darwin':
+        documents_folder = 'Documents'
+    else:
+        logging.info("Running on unsupported os %s", ops)
+        sys.exit(1)
+    root_dir = os.path.join(
+        os.path.expanduser('~'),
+        documents_folder,
+        APP_DIRECTORY_NAME)
+    if not os.path.exists(root_dir):
+        logging.info("Creating dir under %s", root_dir)
+        os.mkdir(root_dir)
+    video_root_dir = os.path.join(root_dir, 'videos')
+    if not os.path.exists(video_root_dir):
+        logging.info("Creating video dir under %s", video_root_dir)
+        os.mkdir(video_root_dir)
+    configs_root_dir = os.path.join(root_dir, 'configs')
+    if not os.path.exists(configs_root_dir):
+        logging.info("Creating configs dir under %s", configs_root_dir)
+        os.mkdir(configs_root_dir)
+    return AppDirectoryConfiguration(
+        root_dir, video_root_dir, configs_root_dir)
 
 
 def trim_resource(
@@ -175,28 +215,26 @@ def main() -> None:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-u',
-        '--url',
-        help='URL for YouTube video',
+        '-i',
+        '--id',
+        help='ID of YouTube video',
         required=True)
     parser.add_argument(
         '-s',
         '--start',
-        help='Start time of video in format 00:00:00',
-        required=True)
+        help='Start time of video in format 00:00:00')
     parser.add_argument(
         '-e',
         '--end',
-        help='End time of video in format 00:00:00',
-        required=True)
+        help='End time of video in format 00:00:00')
     parser.add_argument(
         '-c',
         '--config',
         help='Path to the config required by Vimeo',
         required=True)
     parser.add_argument(
-        '-i',
-        '--image',
+        '-th',
+        '--thumbnail',
         help='Path to the thumbnail image of the video')
     parser.add_argument(
         '-r',
@@ -204,23 +242,31 @@ def main() -> None:
         help='Resolution of the video',
         default='1080p')
     parser.add_argument('-t', '--title', help='Title of the video')
+    parser.add_argument(
+        '-do',
+        '--download_only',
+        help='True if download only, false otherwise',
+        default=False)
     args = parser.parse_args()
 
     vimeo_config = get_vimeo_client_configuration(args.config)
 
     try:
         video_config = get_video_configuration(
-            args.url,
+            args.id,
             args.start,
             args.end,
             args.resolution,
             args.title,
-            args.image)
+            args.thumbnail,
+            args.download_only)
     except (pytube.exceptions.PytubeError, vimeo.exceptions.VideoUploadFailure) as error:
         logging.error("Failed with exception %s", error)
         sys.exit(1)
 
     driver = Driver()
+    app_directory_config = initialize_directories()
+    driver.update_app_directory_config(app_directory_config)
     driver.update_download_service(SupportedServices.YOUTUBE)
     driver.update_upload_service(SupportedServices.VIMEO)
     driver.update_vimeo_client_config(vimeo_config)

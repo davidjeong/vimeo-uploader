@@ -73,28 +73,31 @@ def get_vimeo_client_configuration(
 
 
 def get_video_configuration(
-        video_url: str,
+        video_id: str,
         start_time: str,
         end_time: str,
         resolution: str,
         video_title: str,
-        image_url: str) -> VideoConfiguration:
+        image_url: str,
+        download_only: bool) -> VideoConfiguration:
     """
     Get video configuration from input values
-    :param video_url:
+    :param video_id:
     :param start_time:
     :param end_time:
     :param resolution:
     :param video_title:
     :param image_url:
+    :param download_only:
     :return:
     """
-    start_time_in_sec = get_seconds(start_time)
-    end_time_in_sec = get_seconds(end_time)
+    start_time_in_sec = 0 if download_only else get_seconds(start_time)
+    end_time_in_sec = 0 if download_only else get_seconds(end_time)
     return VideoConfiguration(
-        video_url,
+        video_id,
         start_time_in_sec,
         end_time_in_sec,
         resolution,
         video_title,
-        image_url)
+        image_url,
+        download_only)

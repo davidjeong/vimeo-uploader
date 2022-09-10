@@ -3,8 +3,6 @@ Main entry for GUI
 """
 
 import logging
-import os.path
-import platform
 import shutil
 import sys
 import threading
@@ -14,14 +12,12 @@ from tkinter import Tk, Menu, StringVar, messagebox, LEFT, W, filedialog, Button
 import vimeo
 from pytube.exceptions import RegexMatchError, VideoUnavailable
 
-from core.driver import Driver
+from core.driver import Driver, initialize_directories
 from core.streaming_service import SupportedServices
 from core.util import get_vimeo_client_configuration, get_video_configuration
-from model.config import AppDirectoryConfiguration
 from model.exception import VimeoClientConfigurationException, UnsetConfigurationException
 
 EMPTY_RESOLUTION = ['N/A']
-APP_DIRECTORY_NAME = "Vimeo Uploader"
 
 
 def _about() -> None:
@@ -37,38 +33,6 @@ class ThumbnailHandler:
     Data class for thumbnail path
     """
     thumbnail_path: str = None
-
-
-def _initialize_directories() -> AppDirectoryConfiguration:
-    """
-    Initialize the environment folders and configuration files
-    :return: None
-    """
-    ops = platform.system()
-    if ops == 'Windows':
-        documents_folder = 'My Documents'
-    elif ops == 'Darwin':
-        documents_folder = 'Documents'
-    else:
-        logging.info("Running on unsupported os %s", ops)
-        sys.exit(1)
-    root_dir = os.path.join(
-        os.path.expanduser('~'),
-        documents_folder,
-        APP_DIRECTORY_NAME)
-    if not os.path.exists(root_dir):
-        logging.info("Creating dir under %s", root_dir)
-        os.mkdir(root_dir)
-    video_root_dir = os.path.join(root_dir, 'videos')
-    if not os.path.exists(video_root_dir):
-        logging.info("Creating video dir under %s", video_root_dir)
-        os.mkdir(video_root_dir)
-    configs_root_dir = os.path.join(root_dir, 'configs')
-    if not os.path.exists(configs_root_dir):
-        logging.info("Creating configs dir under %s", configs_root_dir)
-        os.mkdir(configs_root_dir)
-    return AppDirectoryConfiguration(
-        root_dir, video_root_dir, configs_root_dir)
 
 
 def _process_video() -> None:
@@ -243,7 +207,7 @@ _check_if_requirements_met()
 
 driver = Driver()
 thumbnail_handler = ThumbnailHandler()
-app_directory_config = _initialize_directories()
+app_directory_config = initialize_directories()
 driver.update_app_directory_config(app_directory_config)
 driver.update_vimeo_client_config(
     get_vimeo_client_configuration(
