@@ -209,9 +209,12 @@ driver = Driver()
 thumbnail_handler = ThumbnailHandler()
 app_directory_config = initialize_directories()
 driver.update_app_directory_config(app_directory_config)
-driver.update_vimeo_client_config(
-    get_vimeo_client_configuration(
-        app_directory_config.get_vimeo_config_file_path()))
+try:
+    driver.update_vimeo_client_config(
+        get_vimeo_client_configuration(
+            app_directory_config.get_vimeo_config_file_path()))
+except UnsetConfigurationException:
+    logging.error("Failed to get the config file from path")
 
 input_service: SupportedServices = SupportedServices.YOUTUBE
 output_service: SupportedServices = SupportedServices.VIMEO
