@@ -79,7 +79,7 @@ def get_video_configuration(
         resolution: str,
         video_title: str,
         image_url: str,
-        download_only: bool) -> VideoConfiguration:
+        download_only: bool = False) -> VideoConfiguration:
     """
     Get video configuration from input values
     :param video_id:

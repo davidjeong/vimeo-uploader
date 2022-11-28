@@ -9,7 +9,7 @@ consumed by main application.
 ## Pre-requisites
 - [ffmpeg](https://ffmpeg.org/)
   -  linux - use command  ```sudo apt-get install ffmpeg``` or compile from source downloaded from site.
-  -  mac - install homebrew fist, then use command ```brew install ffmpeg```
+  -  mac - install homebrew fist, then use command ```brew install ffmpeg```. Mac OS also requires python 3.10+
   -  windows - download from main site, then add `ffmpeg/bin` to path
 - `vimeo_config.bin` which is encrypted binary file containing vimeo API credentials required for automated upload via API
 
@@ -24,4 +24,5 @@ consumed by main application.
 - Clone the repository
 - Install the pip packages via `pip install -r requirements.txt`
 - Run the command ```pyinstaller gui/main.py -n vimeo-uploader```
+  - On Mac, the command is ```pyinstaller --onedir --windowed gui/main.py -n vimeo-uploader```
 - Artifact can be accessed in `dist/`
