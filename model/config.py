@@ -59,5 +59,5 @@ class VideoMetadata:
     title: str
     author: str
     length_in_sec: int
-    publish_date: datetime
-    resolutions: set
+    publish_date: str
+    resolutions: list

@@ -170,11 +170,10 @@ def _get_video_metadata(video_id: str) -> None:
         if video_metadata is None:
             return False
         else:
-            date_format = "%Y-%m-%d"
             info_dump = f"Title: {video_metadata.title}...\nAuthor: {video_metadata.author}\n" \
                         f"Length: {format_time(video_metadata.length_in_sec)}\n" \
                         f"Length: {video_metadata.length_in_sec} " \
-                        f"Publish Date: {video_metadata.publish_date.strftime(date_format)}"
+                        f"Publish Date: {video_metadata.publish_date}"
             return messagebox.askyesno(
                 'Video select pop-up',
                 f'Use video with information below?\n\n{info_dump}')
