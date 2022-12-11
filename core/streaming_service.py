@@ -2,14 +2,19 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from enum import Enum
+import requests
 
 import ffmpeg
 import pytube
 import vimeo
 from pytube.cli import on_progress
+from pytube.exceptions import VideoUnavailable
 
 from model.config import VideoMetadata, VimeoClientConfiguration
 from model.exception import VimeoClientConfigurationException
+
+AWS_API_GATEWAY_URL = "https://9hlsqdefs7.execute-api.us-east-1.amazonaws.com/prod"
+REQUEST_HEADERS = {"Content-Type": "application/json"}
 
 
 class SupportedServices(Enum):
@@ -68,20 +73,27 @@ YOUTUBE_URL_PREFIX: str = "https://www.youtube.com/watch?v="
 class YouTubeService(StreamingService):
 
     def get_video_metadata(self, video_id) -> VideoMetadata:
-        url = self._get_youtube_url(video_id)
         try:
-            youtube = pytube.YouTube(url, on_progress_callback=on_progress)
-            return VideoMetadata(
-                youtube.video_id,
-                youtube.title,
-                youtube.author,
-                youtube.length,
-                youtube.publish_date,
-                set([stream.resolution for stream in youtube.streams])
-            )
-        except pytube.exceptions.PytubeError as error:
-            logging.error("Failed to get metadata with video id %s", video_id)
-            raise error
+            response = requests.request(
+                "GET",
+                f"{AWS_API_GATEWAY_URL}/video-metadata?platform=youtube&video_id={video_id}",
+                headers=REQUEST_HEADERS)
+            if response.status_code == 200:
+                data = response.json()
+                return VideoMetadata(
+                    data['video_id'],
+                    data['title'],
+                    data['author'],
+                    data['length_in_sec'],
+                    data['publish_date'],
+                    data['resolutions']
+                )
+            elif response.status_code == 404:
+                raise VideoUnavailable(
+                    f"Video with id {video_id} is not available")
+        except requests.exceptions.RequestException as e:
+            logging.error("Failed to get request with exception %s", e)
+            raise e
 
     def download_video(
             self,
