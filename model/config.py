@@ -4,7 +4,6 @@ Contains all data objects used by application
 
 import os
 from dataclasses import dataclass
-from datetime import datetime
 
 VIMEO_CONFIG_FILE_NAME = 'vimeo_config.bin'
 
