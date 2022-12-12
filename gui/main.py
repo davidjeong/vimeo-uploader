@@ -172,7 +172,7 @@ def _get_video_metadata(video_id: str) -> None:
         else:
             info_dump = f"Title: {video_metadata.title}...\nAuthor: {video_metadata.author}\n" \
                         f"Length: {format_time(video_metadata.length_in_sec)}\n" \
-                        f"Length: {video_metadata.length_in_sec} " \
+                        f"Length: {video_metadata.length_in_sec}\n" \
                         f"Publish Date: {video_metadata.publish_date}"
             return messagebox.askyesno(
                 'Video select pop-up',
