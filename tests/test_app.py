@@ -5,7 +5,6 @@ from app import handle_get_video_metadata
 
 
 def test_handle_get_video_metadata() -> None:
-    os.environ['ENV'] = 'development'
     event_object = {
         "queryStringParameters": {
             "platform": "youtube",
