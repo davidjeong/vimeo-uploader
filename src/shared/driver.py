@@ -3,7 +3,6 @@ import logging
 import os
 from datetime import date
 
-import boto3
 import ffmpeg
 from botocore.exceptions import NoCredentialsError
 
