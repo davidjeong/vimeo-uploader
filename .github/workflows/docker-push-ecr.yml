@@ -27,6 +27,10 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+      - name: Download FFMpeg and unzip file
+        run: |
+          curl https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz -m 60 -o ffmpeg-release-arm64.tar.xz
+          tar -xvf ffmpeg-release-arm64.tar.xz
       - name: Build, tag, and push docker image to Amazon ECR
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
