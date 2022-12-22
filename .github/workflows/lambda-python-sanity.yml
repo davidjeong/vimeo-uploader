@@ -2,10 +2,8 @@ name: Run Python Sanity for Lambda
 
 on:
   pull_request:
-    paths: vimeo-uploader-lambda/**
   push:
     branches: main
-    paths: vimeo-uploader-lambda/**
 
 jobs:
   test:

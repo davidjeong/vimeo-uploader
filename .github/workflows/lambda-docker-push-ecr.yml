@@ -8,6 +8,8 @@ on:
       - completed
     branches:
       - main
+    paths:
+      - vimeo-uploader-lambda/**
 
 permissions:
   id-token: write
