@@ -1,4 +1,4 @@
-name: Run Python Sanity
+name: Run Python Sanity for Lambda
 
 on:
   pull_request:
