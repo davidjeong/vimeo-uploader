@@ -2,8 +2,13 @@ name: Run Python Sanity for Lambda
 
 on:
   pull_request:
+    paths-ignore:
+      - '**/README.md'
   push:
-    branches: main
+    branches:
+      - main
+    paths-ignore:
+      - '**/README.md'
 
 jobs:
   test:
