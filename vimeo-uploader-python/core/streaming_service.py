@@ -2,15 +2,17 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from enum import Enum
-import requests
 
 import ffmpeg
 import pytube
+import requests
 import vimeo
+from google.protobuf.json_format import ParseDict
 from pytube.cli import on_progress
 from pytube.exceptions import VideoUnavailable
 
-from model.config import VideoMetadata, VimeoClientConfiguration
+from generated import model_pb2
+from model.config import VimeoClientConfiguration
 from model.exception import VimeoClientConfigurationException
 
 AWS_API_GATEWAY_URL = "https://9hlsqdefs7.execute-api.us-east-1.amazonaws.com/prod"
@@ -28,7 +30,7 @@ class StreamingService(ABC):
     """
 
     @abstractmethod
-    def get_video_metadata(self, video_id) -> VideoMetadata:
+    def get_video_metadata(self, video_id) -> model_pb2.VideoMetadata:
         """
         Get the metadata about the video
         :param video_id: ID of the video
@@ -45,7 +47,7 @@ class StreamingService(ABC):
             output_file_name: str) -> bool:
         """
         Download the video from streaming service with input parameters to the output path. Output video must contain
-        both video and audio channels.
+        both video and audio channels
         :param video_id: ID of the video
         :param resolution: Resolution for the video (e.g. 1080p, 1440p)
         :param download_path: Absolute path to the output destination folder
@@ -58,7 +60,7 @@ class StreamingService(ABC):
     def upload_video(self, video_path: str, video_title: str,
                      thumbnail_image_path: str = None) -> str:
         """
-        Upload the video to streaming service.
+        Upload the video to streaming service
         :param video_path: Absolute path to the video
         :param video_title: Title of the uploaded video
         :param thumbnail_image_path: Absolute path to the thumbnail image
@@ -72,22 +74,16 @@ YOUTUBE_URL_PREFIX: str = "https://www.youtube.com/watch?v="
 
 class YouTubeService(StreamingService):
 
-    def get_video_metadata(self, video_id) -> VideoMetadata:
+    def get_video_metadata(self, video_id) -> model_pb2.VideoMetadata:
         try:
             response = requests.request(
                 "GET",
                 f"{AWS_API_GATEWAY_URL}/video-metadata?platform=youtube&video_id={video_id}",
                 headers=REQUEST_HEADERS)
             if response.status_code == 200:
-                data = response.json()
-                return VideoMetadata(
-                    data['video_id'],
-                    data['title'],
-                    data['author'],
-                    data['length_in_sec'],
-                    data['publish_date'],
-                    data['resolutions']
-                )
+                video_metadata = ParseDict(
+                    response.json(), model_pb2.VideoMetadata())
+                return video_metadata
             elif response.status_code == 404:
                 raise VideoUnavailable(
                     f"Video with id {video_id} is not available")
@@ -165,7 +161,7 @@ class VimeoService(StreamingService):
     def __init__(self):
         self.client_config = None
 
-    def get_video_metadata(self, video_id) -> VideoMetadata:
+    def get_video_metadata(self, video_id) -> model_pb2.VideoMetadata:
         raise NotImplementedError(
             "This operation is not yet implemented for VimeoService.")
 

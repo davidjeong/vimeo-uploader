@@ -21,7 +21,8 @@ import vimeo
 
 from core.streaming_service import YouTubeService, VimeoService, SupportedServices
 from core.util import get_vimeo_client_configuration, get_video_configuration
-from model.config import VimeoClientConfiguration, AppDirectoryConfiguration, VideoConfiguration, VideoMetadata
+from model.config import VimeoClientConfiguration, AppDirectoryConfiguration, VideoConfiguration
+from generated import model_pb2
 from model.exception import UnsetConfigurationException
 
 logging.basicConfig(
@@ -77,7 +78,7 @@ class Driver:
     def get_video_metadata(
             self,
             video_service: SupportedServices,
-            video_id: str) -> VideoMetadata:
+            video_id: str) -> model_pb2.VideoMetadata:
         """
         Get video metadata for supported service
         :param video_service: Service to get video metadata for
