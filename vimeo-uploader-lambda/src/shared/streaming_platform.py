@@ -9,7 +9,7 @@ import pytube as pytube
 import vimeo
 
 from src.shared.exceptions import VimeoUploaderInternalServerError, VimeoUploaderInvalidVideoIdError
-from src.shared.model import VideoMetadata
+from src.generated import model_pb2
 
 
 class SupportedPlatform(Enum):
@@ -20,7 +20,7 @@ class SupportedPlatform(Enum):
 class StreamingPlatform(ABC):
 
     @abstractmethod
-    def get_video_metadata(self, video_id) -> VideoMetadata:
+    def get_video_metadata(self, video_id) -> model_pb2.VideoMetadata:
         """
         Get the metadata about the video
         :param video_id: ID of the video
@@ -65,7 +65,7 @@ DATE_FORMAT: str = "%Y-%m-%d"
 
 class YouTubePlatform(StreamingPlatform):
 
-    def get_video_metadata(self, video_id) -> VideoMetadata:
+    def get_video_metadata(self, video_id) -> model_pb2.VideoMetadata:
         def _get_resolution_sort_key(res: str) -> int:
             return int(res[:-1])
 
@@ -73,13 +73,13 @@ class YouTubePlatform(StreamingPlatform):
         try:
             print(f"Calling to get video metadata for url {url}")
             youtube = pytube.YouTube(url)
-            return VideoMetadata(
-                youtube.video_id,
-                youtube.title,
-                youtube.author,
-                youtube.length,
-                youtube.publish_date.strftime(DATE_FORMAT),
-                list(sorted(set(
+            return model_pb2.VideoMetadata(
+                video_id=youtube.video_id,
+                title=youtube.title,
+                author=youtube.author,
+                length_in_sec=youtube.length,
+                publish_date=youtube.publish_date.strftime(DATE_FORMAT),
+                resolutions=list(sorted(set(
                     [stream.resolution for stream in youtube.streams if stream.resolution]),
                     key=_get_resolution_sort_key))
             )
@@ -156,7 +156,7 @@ class YouTubePlatform(StreamingPlatform):
 
 class VimeoPlatform(StreamingPlatform):
 
-    def get_video_metadata(self, video_id) -> VideoMetadata:
+    def get_video_metadata(self, video_id) -> model_pb2.VideoMetadata:
         raise NotImplementedError("This operation is not yet implemented")
 
     def download_video(
