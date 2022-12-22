@@ -8,6 +8,11 @@ on:
       - completed
     branches:
       - main
+    paths:
+      - 'vimeo-uploader-lambda/app.py'
+      - 'vimeo-uploader-lambda/src/*'
+      - 'vimeo-uploader-lambda/Dockerfile'
+      - 'vimeo-uploader-lambda/requirements.txt'
 
 permissions:
   id-token: write
