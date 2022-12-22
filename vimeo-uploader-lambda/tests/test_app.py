@@ -1,7 +1,6 @@
 import json
 
 from app import handle_get_video_metadata
-from src.generated import model_pb2
 
 
 def test_handle_get_video_metadata() -> None:

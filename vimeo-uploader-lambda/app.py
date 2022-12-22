@@ -1,4 +1,3 @@
-import json
 import os
 
 import boto3
@@ -58,10 +57,7 @@ def handle_process_video_upload(event, context):
             download)
         return {
             'statusCode': 200,
-            'body': {
-                'download_url': video_process_result.download_url,
-                'upload_url': video_process_result.upload_url
-            }
+            'body': MessageToJson(video_process_result)
         }
     except VimeoUploaderInternalServerError:
         return {
