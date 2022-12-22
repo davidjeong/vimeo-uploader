@@ -7,3 +7,4 @@ mutagen~=1.45.1
 moviepy~=1.0.3
 ffmpeg-python~=0.2.0
 cryptography~=37.0.2
+protobuf~=4.21.12

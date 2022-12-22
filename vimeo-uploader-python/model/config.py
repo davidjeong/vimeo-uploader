@@ -47,16 +47,3 @@ class VimeoClientConfiguration:
     token: str
     key: str
     secret: str
-
-
-@dataclass
-class VideoMetadata:
-    """
-    Data object for Video metadata
-    """
-    video_id: str
-    title: str
-    author: str
-    length_in_sec: int
-    publish_date: str
-    resolutions: list

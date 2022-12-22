@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from tkinter import Tk, Menu, StringVar, messagebox, LEFT, W, filedialog, Button, ttk, BooleanVar
 
 import vimeo
-from pytube.exceptions import RegexMatchError, VideoUnavailable
+from pytube.exceptions import VideoUnavailable
 
 from core.driver import Driver, initialize_directories
 from core.streaming_service import SupportedServices
@@ -188,8 +188,6 @@ def _get_video_metadata(video_id: str) -> None:
         proceed = _process_video_information()
     except VideoUnavailable as error:
         logging.warning(error)
-    except RegexMatchError as error:
-        logging.debug(error)
     finally:
         if proceed:
             video_resolutions = sorted(
