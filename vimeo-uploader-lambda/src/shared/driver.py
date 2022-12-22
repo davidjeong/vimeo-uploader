@@ -7,7 +7,7 @@ import ffmpeg
 from botocore.exceptions import NoCredentialsError
 
 from src.shared.exceptions import VimeoUploaderInternalServerError
-from src.shared.model import VideoMetadata, VideoProcessResult
+from src.generated import model_pb2
 from src.shared.streaming_platform import SupportedPlatform, YouTubePlatform, VimeoPlatform
 
 
@@ -31,7 +31,7 @@ class Driver:
     def get_video_metadata(
             self,
             platform: str,
-            video_id: str) -> VideoMetadata:
+            video_id: str) -> model_pb2.VideoMetadata:
         """
         Get video metadata for supported platform
         :param platform: Supported platform
@@ -51,7 +51,7 @@ class Driver:
             image_file_name: str,
             resolution: str,
             title: str,
-            download: bool) -> VideoProcessResult:
+            download: bool) -> model_pb2.VideoProcessResult:
         """
         Process the video with input video configuration
         :param download_platform: Supported platform for download
@@ -120,7 +120,7 @@ class Driver:
         logging.info("Download link is %s", download_url)
         logging.info("Upload link is %s", upload_url)
 
-        return VideoProcessResult(
+        return model_pb2.VideoProcessResult(
             download_url=download_url,
             upload_url=upload_url)
 
