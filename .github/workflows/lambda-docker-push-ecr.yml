@@ -9,9 +9,10 @@ on:
     branches:
       - main
     paths:
-      - 'vimeo-uploader-lambda/**'
-    paths-ignore:
-      - '**/README.md'
+      - 'vimeo-uploader-lambda/app.py'
+      - 'vimeo-uploader-lambda/src/*'
+      - 'vimeo-uploader-lambda/Dockerfile'
+      - 'vimeo-uploader-lambda/requirements.txt'
 
 permissions:
   id-token: write
