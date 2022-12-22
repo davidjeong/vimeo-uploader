@@ -3,8 +3,8 @@ import os
 import boto3
 from google.protobuf.json_format import MessageToJson
 
-from src.shared.driver import Driver
-from src.shared.exceptions import VimeoUploaderInternalServerError, VimeoUploaderInvalidVideoIdError
+from core.driver import Driver
+from core.exceptions import VimeoUploaderInternalServerError, VimeoUploaderInvalidVideoIdError
 
 
 def handle_get_video_metadata(event, context):
