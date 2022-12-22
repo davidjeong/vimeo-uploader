@@ -6,9 +6,9 @@ from datetime import date
 import ffmpeg
 from botocore.exceptions import NoCredentialsError
 
-from src.shared.exceptions import VimeoUploaderInternalServerError
-from src.generated import model_pb2
-from src.shared.streaming_platform import SupportedPlatform, YouTubePlatform, VimeoPlatform
+from core.exceptions import VimeoUploaderInternalServerError
+from core.generated import model_pb2
+from core.streaming_platform import SupportedPlatform, YouTubePlatform, VimeoPlatform
 
 
 class Driver:
@@ -47,7 +47,7 @@ class Driver:
             video_id: str,
             start_time_in_sec: int,
             end_time_in_sec: int,
-            image_content: str,
+            image_content: bytes,
             image_file_name: str,
             resolution: str,
             title: str,
@@ -158,7 +158,7 @@ class Driver:
 
     @staticmethod
     def _write_image_stream_to_file(
-            image_content: str,
+            image_content: bytes,
             root_path: str,
             file_name: str) -> str:
         """

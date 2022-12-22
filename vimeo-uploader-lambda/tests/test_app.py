@@ -1,9 +1,6 @@
-import json
-
-from google.protobuf.json_format import Parse
-
 from app import handle_get_video_metadata
-from src.generated import model_pb2
+from core.generated import model_pb2
+from google.protobuf.json_format import Parse
 
 
 def test_handle_get_video_metadata() -> None:

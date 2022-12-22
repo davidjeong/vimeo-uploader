@@ -4,7 +4,7 @@ from unittest import mock
 
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
-from src.shared.streaming_platform import YouTubePlatform, VimeoPlatform
+from core.streaming_platform import YouTubePlatform, VimeoPlatform
 
 
 def test_youtube_platform_get_video_metadata() -> None:

@@ -1,7 +1,7 @@
 import base64
 import os
 
-from src.shared.driver import Driver
+from core.driver import Driver
 
 
 def test_write_base64_image_content_to_disk(tmpdir):

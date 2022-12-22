@@ -8,8 +8,8 @@ import ffmpeg
 import pytube as pytube
 import vimeo
 
-from src.shared.exceptions import VimeoUploaderInternalServerError, VimeoUploaderInvalidVideoIdError
-from src.generated import model_pb2
+from core.exceptions import VimeoUploaderInternalServerError, VimeoUploaderInvalidVideoIdError
+from core.generated import model_pb2
 
 
 class SupportedPlatform(Enum):
