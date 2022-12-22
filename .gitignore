@@ -129,4 +129,14 @@ dmypy.json
 .pyre/
 
 # PyCharm
+<<<<<<< HEAD
 .idea/
+=======
+.idea/
+
+# MacOS
+.DS_Store
+
+# FFMpeg
+ffmpeg*
+>>>>>>> main-holder
