@@ -1,6 +1,8 @@
+import json
 import os
 
 import boto3
+from google.protobuf.json_format import MessageToJson
 
 from src.shared.driver import Driver
 from src.shared.exceptions import VimeoUploaderInternalServerError, VimeoUploaderInvalidVideoIdError
@@ -15,7 +17,7 @@ def handle_get_video_metadata(event, context):
         print(f"Retrieved the video metadata for video id {video_id}")
         return {
             'statusCode': 200,
-            'body': video_metadata.SerializeToString()
+            'body': MessageToJson(video_metadata)
         }
     except VimeoUploaderInvalidVideoIdError:
         return {
@@ -56,10 +58,12 @@ def handle_process_video_upload(event, context):
             download)
         return {
             'statusCode': 200,
-            'body': video_process_result.SerializeToString()
+            'body': {
+                'download_url': video_process_result.download_url,
+                'upload_url': video_process_result.upload_url
+            }
         }
     except VimeoUploaderInternalServerError:
         return {
             'statusCode': 500,
             'errorMessage': f"Failed to process the video with id {video_id} due to some internal server error"}
-
