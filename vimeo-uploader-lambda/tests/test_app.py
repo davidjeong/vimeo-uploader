@@ -1,5 +1,4 @@
 import json
-import os
 
 from app import handle_get_video_metadata
 
