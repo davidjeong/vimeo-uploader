@@ -15,16 +15,25 @@ def handle_get_video_metadata(event, context):
         video_metadata = driver.get_video_metadata(platform, video_id)
         print(f"Retrieved the video metadata for video id {video_id}")
         return {
+            'headers': {
+                'Content-Type': 'application/json'
+            },
             'statusCode': 200,
             'body': MessageToJson(video_metadata)
         }
     except VimeoUploaderInvalidVideoIdError:
         return {
+            'headers': {
+                'Content-Type': 'application/json'
+            },
             'statusCode': 404,
             'errorMessage': f"Failed to get metadata with video id {video_id} because it is invalid"
         }
     except VimeoUploaderInternalServerError:
         return {
+            'headers': {
+                'Content-Type': 'text/plain'
+            },
             'statusCode': 500,
             'errorMessage': f"Failed to get metadata with video id {video_id} due to some internal server error"}
 
@@ -56,10 +65,16 @@ def handle_process_video_upload(event, context):
             title,
             download)
         return {
+            'headers': {
+                'Content-Type': 'application/json'
+            },
             'statusCode': 200,
             'body': MessageToJson(video_process_result)
         }
     except VimeoUploaderInternalServerError:
         return {
+            'headers': {
+                'Content-Type': 'text/plain'
+            },
             'statusCode': 500,
             'errorMessage': f"Failed to process the video with id {video_id} due to some internal server error"}
