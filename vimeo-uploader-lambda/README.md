@@ -1,6 +1,6 @@
 # Vimeo Uploader in AWS Lambda
 
-[![Run Python Sanity](https://github.com/davidjeong/vimeo-uploader/actions/workflows/python-sanity.yml/badge.svg?branch=main)](https://github.com/davidjeong/vimeo-uploader/actions/workflows/python-sanity.yml)[![Push Docker Image to ECR](https://github.com/davidjeong/vimeo-uploader/actions/workflows/docker-push-ecr.yml/badge.svg?branch=main)](https://github.com/davidjeong/vimeo-uploader/actions/workflows/docker-push-ecr.yml)
+[![Run Python Sanity for Lambda](https://github.com/davidjeong/vimeo-uploader/actions/workflows/lambda-python-sanity.yml/badge.svg?branch=main)](https://github.com/davidjeong/vimeo-uploader/actions/workflows/lambda-python-sanity.yml)[![Push Lambda Docker Image to ECR](https://github.com/davidjeong/vimeo-uploader/actions/workflows/lambda-docker-push-ecr.yml/badge.svg?branch=main)](https://github.com/davidjeong/vimeo-uploader/actions/workflows/lambda-docker-push-ecr.yml)
 
 This is the repository containing python and docker files for the backend functionalities required by vimeo upload tool.
 This is being migrated from [Vimeo Uploader](https://github.com/davidjeong/vimeo_uploader), which currently performs
