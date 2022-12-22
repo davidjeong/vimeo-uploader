@@ -1,11 +1,7 @@
 name: Push Lambda Docker Image to ECR
 
 on:
-  workflow_run:
-    workflows:
-      - Run Python Sanity for Lambda
-    types:
-      - completed
+  push:
     branches:
       - main
     paths:
@@ -37,7 +33,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
       - name: Download FFMpeg and unzip file
         run: |
-          curl https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz 
+          curl https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz \
             --connect-timeout 5 --max-time 5 --retry 5 --retry-delay 0 --output ffmpeg-release-arm64.tar.xz
           tar -xvf ffmpeg-release-arm64.tar.xz
       - name: Build, tag, and push docker image to Amazon ECR
