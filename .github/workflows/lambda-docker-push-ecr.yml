@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'vimeo-uploader-lambda/app.py'
-      - 'vimeo-uploader-lambda/src/*'
+      - 'vimeo-uploader-lambda/core/*'
       - 'vimeo-uploader-lambda/Dockerfile'
       - 'vimeo-uploader-lambda/requirements.txt'
 
