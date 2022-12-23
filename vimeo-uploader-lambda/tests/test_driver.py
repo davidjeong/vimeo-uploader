@@ -36,7 +36,7 @@ def test_process_video() -> None:
     video_id = "XsX3ATc3FbA"
     start_time_in_sec = 60
     end_time_in_sec = 120
-    image_content = b""
+    image_content = ""
     image_name = ""
     resolution = "1080p"
     title = "BTS MV"

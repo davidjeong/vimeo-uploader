@@ -176,7 +176,7 @@ class Driver:
 
     @staticmethod
     def _write_image_stream_to_file(
-            image_content: bytes,
+            image_content: str,
             root_path: str,
             file_name: str) -> str:
         """
