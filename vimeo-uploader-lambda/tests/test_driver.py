@@ -36,7 +36,7 @@ def test_process_video() -> None:
     video_id = "XsX3ATc3FbA"
     start_time_in_sec = 60
     end_time_in_sec = 120
-    image_content = ""
+    image_content = b""
     image_name = ""
     resolution = "1080p"
     title = "BTS MV"
@@ -72,10 +72,9 @@ def test_process_video() -> None:
 
 
 def test_write_base64_image_content_to_disk(tmpdir):
-    os.environ['ENV'] = 'development'
     test_image_path = os.path.join('tests', 'resources', 'thumbnail.jpg')
     with open(test_image_path, 'rb') as file:
-        encoded_string = base64.b64encode(file.read())
+        encoded_string = base64.b64encode(file.read()).decode('UTF-8')
     driver = Driver()
     written_path = driver._write_image_stream_to_file(
         encoded_string, tmpdir, "thumbnail.jpg")

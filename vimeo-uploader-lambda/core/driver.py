@@ -65,7 +65,7 @@ class Driver:
             video_id: str,
             start_time_in_sec: int,
             end_time_in_sec: int,
-            image_content: bytes,
+            image_content: str,
             image_file_name: str,
             resolution: str,
             title: str,
@@ -189,7 +189,7 @@ class Driver:
         """
         image_path = os.path.join(root_path, file_name)
         with open(image_path, 'wb') as file:
-            file.write(base64.decodebytes(image_content))
+            file.write(base64.b64decode(image_content.encode('utf-8')))
         return image_path
 
 
