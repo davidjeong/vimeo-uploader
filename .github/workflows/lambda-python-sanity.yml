@@ -23,14 +23,14 @@ jobs:
       with:
         python-version: "3.9"
     - name: Install FFMpeg
-      run: apt-get install ffmpeg
+      run: sudo apt-get install ffmpeg
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install flake8 moviepy pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Install protobuf compiler
-      run: apt-get install -y protobuf-compiler
+      run: sudo apt-get install -y protobuf-compiler
     - name: Generate protobuf
       run: |
         mkdir -p core/generated
