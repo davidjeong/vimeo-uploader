@@ -5,8 +5,8 @@ RUN pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
 
 COPY app.py ${LAMBDA_TASK_ROOT}
 COPY core ${LAMBDA_TASK_ROOT}/core
-COPY ffmpeg-5.1.1-arm64-static /usr/local/bin/ffmpeg
+COPY ffmpeg-5.1.1-arm64-static /tmp/ffmpeg
 
-ENV PATH "${PATH}:/usr/local/bin/ffmpeg"
+ENV PATH "${PATH}:/tmp/ffmpeg"
 
 CMD ["app.handler"]
