@@ -46,8 +46,8 @@ def _handle_get_video_metadata(
 
 
 def handle_process_video_upload(event, context):
+    print(event['body'])
     body = json.loads(event['body'])
-    print(body)
     download_platform = body['download_platform']
     upload_platform = body['upload_platform']
     video_id = body['video_id']
