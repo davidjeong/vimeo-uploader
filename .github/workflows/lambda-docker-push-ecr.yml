@@ -36,8 +36,13 @@ jobs:
         curl https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz \
           --connect-timeout 5 --max-time 5 --retry 5 --retry-delay 0 --output ffmpeg-release-arm64.tar.xz
         tar -xvf ffmpeg-release-arm64.tar.xz
-    - name: Install protobuf compiler
-      run: sudo apt-get install -y protobuf-compiler
+    - name: Download and install the protobuf compiler
+      run: |
+        curl https://github.com/protocolbuffers/protobuf/releases/download/v21.12/protoc-21.12-linux-x86_64.zip \
+          --connect-timeout 5 --max-time 5 --retry 5 --retry-delay 0 --output protoc-linux-x86_64.zip
+        sudo apt-get install unzip
+        unzip protoc-linux-x86_64.zip -d protoc-linux-x86_64
+        echo "protoc-linux-x86_64/bin" >> $GITHUB_PATH
     - name: Generate protobuf
       run: |
         mkdir -p core/generated
