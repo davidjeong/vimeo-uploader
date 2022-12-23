@@ -29,6 +29,17 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 moviepy pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Download and install the protobuf compiler
+      run: |
+        wget --tries=5 --connect-timeout=5 -O protoc-linux-x86_64.zip \
+          https://github.com/protocolbuffers/protobuf/releases/download/v21.12/protoc-21.12-linux-x86_64.zip 
+        sudo apt-get install unzip
+        unzip protoc-linux-x86_64.zip -d protoc-linux-x86_64
+        echo "protoc-linux-x86_64/bin" >> $GITHUB_PATH
+    - name: Generate protobuf
+      run: |
+        mkdir -p core/generated
+        protoc --proto_path=proto -I=proto --python_out=core/generated proto/model.proto
     - name: Lint with flake8
       run: |
         flake8 app.py core --exclude=core/generated --count --select=E9,F63,F7,F82 --show-source --statistics
