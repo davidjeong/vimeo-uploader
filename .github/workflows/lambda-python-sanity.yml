@@ -33,7 +33,6 @@ jobs:
       run: apt-get install -y protobuf-compiler
     - name: Generate protobuf
       run: |
-        protoc --version
         mkdir -p core/generated
         protoc --proto_path=proto -I=proto --python_out=core/generated proto/model.proto
     - name: Lint with flake8
