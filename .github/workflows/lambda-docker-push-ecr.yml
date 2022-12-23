@@ -42,5 +42,15 @@ jobs:
           REPOSITORY: vimeo-uploader
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build . --file Dockerfile -t $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          docker build . --file Dockerfile -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -t $REGISTRY/$REPOSITORY:latest
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+      - name: Update Lambda function with image on Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: vimeo-uploader
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          aws lambda update-function-code --function-name get-video-metadata --region us-east-1 \
+            --image-uri $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          aws lambda update-function-code --function-name process-video --region us-east-1 \
+            --image-uri $REGISTRY/$REPOSITORY:$IMAGE_TAG
