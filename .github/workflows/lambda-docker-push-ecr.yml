@@ -37,7 +37,7 @@ jobs:
           --connect-timeout 5 --max-time 5 --retry 5 --retry-delay 0 --output ffmpeg-release-arm64.tar.xz
         tar -xvf ffmpeg-release-arm64.tar.xz
     - name: Install protobuf compiler
-      run: sudo apt-get install protobuf-compiler python-protobuf
+      run: apt-get install -y protobuf-compiler python-protobuf
     - name: Generate protobuf
       run: |
         mkdir -p core/generated

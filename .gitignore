@@ -136,3 +136,6 @@ dmypy.json
 
 # FFMpeg
 ffmpeg*
+
+# Protobuf
+**/generated/*_pb2.*
