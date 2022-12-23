@@ -21,36 +21,40 @@ jobs:
       run:
         working-directory: vimeo-uploader-lambda
     steps:
-      - uses: actions/checkout@v3
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          role-to-assume: arn:aws:iam::809645049664:role/github-action-ecr-role
-          role-duration-seconds: 900
-          aws-region: us-east-1
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-      - name: Download FFMpeg and unzip file
-        run: |
-          curl https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz \
-            --connect-timeout 5 --max-time 5 --retry 5 --retry-delay 0 --output ffmpeg-release-arm64.tar.xz
-          tar -xvf ffmpeg-release-arm64.tar.xz
-      - name: Build, tag, and push docker image to Amazon ECR
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: vimeo-uploader
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          docker build . --file Dockerfile -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -t $REGISTRY/$REPOSITORY:latest
-          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
-      - name: Update Lambda function with image on Amazon ECR
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: vimeo-uploader
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          aws lambda update-function-code --function-name get-video-metadata --region us-east-1 \
-            --image-uri $REGISTRY/$REPOSITORY:$IMAGE_TAG
-          aws lambda update-function-code --function-name process-video --region us-east-1 \
-            --image-uri $REGISTRY/$REPOSITORY:$IMAGE_TAG
+    - uses: actions/checkout@v3
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: arn:aws:iam::809645049664:role/github-action-ecr-role
+        role-duration-seconds: 900
+        aws-region: us-east-1
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Download FFMpeg and unzip file
+      run: |
+        curl https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz \
+          --connect-timeout 5 --max-time 5 --retry 5 --retry-delay 0 --output ffmpeg-release-arm64.tar.xz
+        tar -xvf ffmpeg-release-arm64.tar.xz
+    - name: Generate protobuf
+      run: |
+        mkdir -p core/generated
+        protoc --proto_path=proto -I=proto --python_out=core/generated --pyi_out=core/generated proto/model.proto
+    - name: Build, tag, and push docker image to Amazon ECR
+      env:
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        REPOSITORY: vimeo-uploader
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build . --file Dockerfile -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -t $REGISTRY/$REPOSITORY:latest
+        docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+    - name: Update Lambda function with image on Amazon ECR
+      env:
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        REPOSITORY: vimeo-uploader
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        aws lambda update-function-code --function-name get-video-metadata --region us-east-1 \
+          --image-uri $REGISTRY/$REPOSITORY:$IMAGE_TAG
+        aws lambda update-function-code --function-name process-video --region us-east-1 \
+          --image-uri $REGISTRY/$REPOSITORY:$IMAGE_TAG
