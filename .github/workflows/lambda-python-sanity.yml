@@ -29,6 +29,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 moviepy pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Install protobuf compiler
+      run: sudo apt-get install protobuf-compiler
     - name: Generate protobuf
       run: |
         mkdir -p core/generated
