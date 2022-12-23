@@ -36,13 +36,17 @@ class Driver:
             self,
             s3_client: BaseClient = None,
             download_platform: StreamingPlatform = None,
-            upload_platform: StreamingPlatform = None) -> None:
+            upload_platform: StreamingPlatform = None,
+            allow_download=True,
+            allow_upload=True) -> None:
         """
         Initialize the driver used to interact with video/audio resources.
         """
         self.download_platform = download_platform
         self.upload_platform = upload_platform
         self.s3_client = s3_client
+        self.allow_download = allow_download
+        self.allow_upload = allow_upload
         print("Driver initialization successful")
 
     def get_video_metadata(
@@ -118,10 +122,13 @@ class Driver:
         else:
             image_path = None
 
-        upload_url = self.upload_platform.upload_video(
-            trimmed_video_path, title, image_path)
+        if self.allow_upload:
+            upload_url = self.upload_platform.upload_video(
+                trimmed_video_path, title, image_path)
+        else:
+            upload_url = None
 
-        if download:
+        if self.allow_download and download:
             download_url = self._upload_file_to_s3(
                 s3_object_key, trimmed_video_path)
         else:
