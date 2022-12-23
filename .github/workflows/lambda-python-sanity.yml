@@ -35,7 +35,7 @@ jobs:
       run: |
         protoc --version
         mkdir -p core/generated
-        protoc --proto_path=proto -I=proto --python_out=core/generated --pyi_out=core/generated proto/model.proto
+        protoc --proto_path=proto -I=proto --python_out=core/generated proto/model.proto
     - name: Lint with flake8
       run: |
         flake8 app.py core --exclude=core/generated --count --select=E9,F63,F7,F82 --show-source --statistics
