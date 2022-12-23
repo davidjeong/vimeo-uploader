@@ -4,46 +4,60 @@ import os
 from datetime import date
 
 import ffmpeg
+from botocore.client import BaseClient
 from botocore.exceptions import NoCredentialsError
 
 from core.exceptions import VimeoUploaderInternalServerError
 from core.generated import model_pb2
-from core.streaming_platform import SupportedPlatform, YouTubePlatform, VimeoPlatform
+from core.streaming_platform import YouTubePlatform, VimeoPlatform, StreamingPlatform, SupportedPlatform
+
+STREAMING_PLATFORMS = {
+    SupportedPlatform.YOUTUBE.name.lower(): YouTubePlatform(),
+    SupportedPlatform.VIMEO.name.lower(): VimeoPlatform()
+}
+
+
+def get_streaming_platform(platform: str) -> StreamingPlatform:
+    """
+    Fetch streaming platform from platform string.
+
+    :param platform: Platform string
+    :return:
+    """
+    return STREAMING_PLATFORMS.get(platform)
 
 
 class Driver:
     """
-    Driver for the video/audio interaction
+    Main driver for the video/audio interaction.
     """
 
-    def __init__(self, s3_client=None, environment=None) -> None:
+    def __init__(
+            self,
+            s3_client: BaseClient = None,
+            download_platform: StreamingPlatform = None,
+            upload_platform: StreamingPlatform = None) -> None:
         """
-        Initialize the driver used to interact with video/audio resources
+        Initialize the driver used to interact with video/audio resources.
         """
-        self.streaming_platforms = {
-            SupportedPlatform.YOUTUBE.name.lower(): YouTubePlatform(),
-            SupportedPlatform.VIMEO.name.lower(): VimeoPlatform()
-        }
+        self.download_platform = download_platform
+        self.upload_platform = upload_platform
         self.s3_client = s3_client
-        self.environment = environment
         print("Driver initialization successful")
 
     def get_video_metadata(
             self,
-            platform: str,
             video_id: str) -> model_pb2.VideoMetadata:
         """
-        Get video metadata for supported platform
-        :param platform: Supported platform
+        Get video metadata from download platform.
+
         :param video_id: ID of the video
         :return: Video metadata from video service for video ID
         """
-        return self.streaming_platforms[platform].get_video_metadata(video_id)
+        return self.download_platform.get_video_metadata(video_id)
 
     def process_video(
             self,
-            download_platform: str,
-            upload_platform: str,
             video_id: str,
             start_time_in_sec: int,
             end_time_in_sec: int,
@@ -53,9 +67,8 @@ class Driver:
             title: str,
             download: bool) -> model_pb2.VideoProcessResult:
         """
-        Process the video with input video configuration
-        :param download_platform: Supported platform for download
-        :param upload_platform: Supported platform for upload
+        Process the video with input video configuration.
+
         :param video_id: ID of the video
         :param start_time_in_sec: Start time of trim in seconds
         :param end_time_in_sec: End time of trim in seconds
@@ -64,7 +77,7 @@ class Driver:
         :param resolution: Resolution of the final video
         :param title: Title of the video
         :param download: True if download the video, false otherwise
-        :return
+        :return:
         """
         if not title:
             today = date.today()
@@ -83,21 +96,21 @@ class Driver:
         combined_video_path = os.path.join(download_path, combined_video_name)
         trimmed_video_path = os.path.join(download_path, trimmed_video_name)
 
-        downloaded = self.streaming_platforms[download_platform].download_video(
+        downloaded = self.download_platform.download_video(
             video_id, resolution, download_path, combined_video_name)
 
         if not downloaded:
             raise VimeoUploaderInternalServerError(
                 "Failed to download the video")
 
-        trim_resource(
-            combined_video_path,
-            trimmed_video_path,
-            start_time_in_sec,
-            end_time_in_sec
-        )
-
-        logging.info("Finished trimming the video")
+        if os.path.exists(combined_video_path):
+            trim_resource(
+                combined_video_path,
+                trimmed_video_path,
+                start_time_in_sec,
+                end_time_in_sec
+            )
+            logging.info("Finished trimming the video")
 
         if image_content:
             image_path = self._write_image_stream_to_file(
@@ -105,13 +118,10 @@ class Driver:
         else:
             image_path = None
 
-        if self.environment == "production":
-            upload_url = self.streaming_platforms[upload_platform].upload_video(
-                trimmed_video_path, title, image_path)
-        else:
-            upload_url = None
+        upload_url = self.upload_platform.upload_video(
+            trimmed_video_path, title, image_path)
 
-        if self.environment == "production" and download:
+        if download:
             download_url = self._upload_file_to_s3(
                 s3_object_key, trimmed_video_path)
         else:
@@ -125,17 +135,18 @@ class Driver:
             upload_url=upload_url)
 
     def _upload_file_to_s3(
-            self,
-            object_key: str,
-            object_path: str,
-            expires_in: int = 6 *
+        self,
+        object_key: str,
+        object_path: str,
+        expires_in: int = 6 *
             3600) -> str:
         """
-        Upload file to S3
+        Upload file to S3.
+
         :param object_key: Key of the object
         :param object_path: Path to the object
         :expires_in: Expiry time of object on S3 (in seconds)
-        :return
+        :return:
         """
         try:
             self.s3_client.upload_file(object_path,
@@ -162,11 +173,12 @@ class Driver:
             root_path: str,
             file_name: str) -> str:
         """
-        Write image stream to file specified by path
+        Write image stream to file specified by path.
+
         :param image_content: Content stream of image (in base64)
         :param root_path: Root path of file
         :param file_name: Name of the original file
-        :return
+        :return:
         """
         image_path = os.path.join(root_path, file_name)
         with open(image_path, 'wb') as file:
@@ -180,7 +192,8 @@ def trim_resource(
         start_time_in_sec: int,
         end_time_in_sec: int) -> None:
     """
-    Trim the resource based on start and end time in seconds
+    Trim the resource based on start and end time in seconds.
+
     :param input_path:
     :param output_path:
     :param start_time_in_sec:

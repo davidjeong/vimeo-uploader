@@ -1,18 +1,27 @@
 import os
 
 import boto3
+from botocore.client import BaseClient
 from google.protobuf.json_format import MessageToJson
 
-from core.driver import Driver
+from core.driver import Driver, get_streaming_platform
 from core.exceptions import VimeoUploaderInternalServerError, VimeoUploaderInvalidVideoIdError
+from core.streaming_platform import StreamingPlatform
 
 
 def handle_get_video_metadata(event, context):
-    driver = Driver()
     platform = event['queryStringParameters']['platform']
     video_id = event['queryStringParameters']['video_id']
+    return _handle_get_video_metadata(
+        get_streaming_platform(platform), video_id)
+
+
+def _handle_get_video_metadata(
+        download_platform: StreamingPlatform,
+        video_id: str):
+    driver = Driver(download_platform=download_platform)
     try:
-        video_metadata = driver.get_video_metadata(platform, video_id)
+        video_metadata = driver.get_video_metadata(video_id)
         print(f"Retrieved the video metadata for video id {video_id}")
         return {
             'headers': {
@@ -39,9 +48,6 @@ def handle_get_video_metadata(event, context):
 
 
 def handle_process_video_upload(event, context):
-    driver = Driver(
-        s3_client=boto3.client('s3'),
-        environment=os.environ['ENV'])
     download_platform = event['download_platform']
     upload_platform = event['upload_platform']
     video_id = event['video_id']
@@ -52,10 +58,36 @@ def handle_process_video_upload(event, context):
     resolution = event['resolution']
     title = event['title']
     download = bool(event['download'])
+    s3_client = boto3.client('s3')
+    return _handle_process_video_upload(
+        s3_client,
+        get_streaming_platform(download_platform),
+        get_streaming_platform(upload_platform),
+        video_id,
+        start_time_in_sec,
+        end_time_in_sec,
+        image_content,
+        image_name,
+        resolution,
+        title,
+        download)
+
+
+def _handle_process_video_upload(
+        s3_client: BaseClient,
+        download_platform: StreamingPlatform,
+        upload_platform: StreamingPlatform,
+        video_id: str,
+        start_time_in_sec: int,
+        end_time_in_sec: int,
+        image_content: bytes,
+        image_name: str,
+        resolution: str,
+        title: str,
+        download: bool):
+    driver = Driver(s3_client, download_platform, upload_platform)
     try:
         video_process_result = driver.process_video(
-            download_platform,
-            upload_platform,
             video_id,
             start_time_in_sec,
             end_time_in_sec,
