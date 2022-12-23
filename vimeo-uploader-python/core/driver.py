@@ -21,7 +21,8 @@ class Driver:
     Driver for the video/audio interaction
     """
 
-    def __init__(self, aws_api_gateway_url: str, process_video_function_url) -> None:
+    def __init__(self, aws_api_gateway_url: str,
+                 process_video_function_url) -> None:
         """
         Initialize the driver used to interact with video/audio resources
         """

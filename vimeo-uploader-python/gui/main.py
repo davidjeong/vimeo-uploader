@@ -17,6 +17,7 @@ EMPTY_RESOLUTION = ['N/A']
 AWS_API_GATEWAY_URL = "https://9hlsqdefs7.execute-api.us-east-1.amazonaws.com/prod"
 PROCESS_VIDEO_FUNCTION_URL = "https://ork6ai5jmk2bm3ykzuowexapjq0jmmzy.lambda-url.us-east-1.on.aws/"
 
+
 def _about() -> None:
     messagebox.showinfo(
         'About',
@@ -42,7 +43,8 @@ def _process_video() -> None:
         image_path = thumbnail_handler.thumbnail_path
         if image_path:
             with open(image_path, 'rb') as image_file:
-                image_content = base64.b64encode(image_file.read()).decode("utf-8")
+                image_content = base64.b64encode(
+                    image_file.read()).decode("utf-8")
             image_name = os.path.basename(image_path)
         else:
             image_content = ""
@@ -50,7 +52,17 @@ def _process_video() -> None:
         resolution = resolution_text.get()
         title = title_entry.get()
         download = False
-        driver.process(download_platform, upload_platform, video_id, start_time_in_sec, end_time_in_sec, image_content, image_name, resolution, title, download)
+        driver.process(
+            download_platform,
+            upload_platform,
+            video_id,
+            start_time_in_sec,
+            end_time_in_sec,
+            image_content,
+            image_name,
+            resolution,
+            title,
+            download)
         messagebox.showinfo(
             "Upload status",
             f"Finished uploading video to Vimeo for YouTube video with ID [{video_id}]")
@@ -310,9 +322,9 @@ root.config(menu=menubar)
 video_id_str.trace(
     "w",
     lambda name,
-           index,
-           mode,
-           video_id=video_id_str: _get_video_metadata(
+    index,
+    mode,
+    video_id=video_id_str: _get_video_metadata(
         video_id.get()))
 
 image_text.set("Path to thumbnail image (optional)")

@@ -17,4 +17,3 @@ def test_get_seconds() -> None:
     hour_time_and_one_second = '01:00:01'
     hour_time_and_one_second_in_sec = get_seconds(hour_time_and_one_second)
     assert hour_time_and_one_second_in_sec == 60 * 60 + 1
-
