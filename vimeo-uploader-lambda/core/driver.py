@@ -93,7 +93,7 @@ class Driver:
         trimmed_video_name = f"{video_id}_{suffix}.mp4"
         s3_object_key = f"{video_id}_{suffix}"
 
-        download_path = f"/tmp/{video_id}"
+        download_path = os.path.join("/tmp", video_id)
         if not os.path.exists(download_path):
             logging.info("Creating directory %s", download_path)
             os.mkdir(download_path)
