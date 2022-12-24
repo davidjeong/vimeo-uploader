@@ -26,12 +26,6 @@ class VimeoUploaderLambdaClient:
         :param aws_access_key_id: AWS access key id
         :param aws_secret_access_key: AWS secret access key
         """
-        self.s3_client = boto3.client(
-            's3',
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            region_name='us-east-1'
-        )
         self.lambda_client = boto3.client(
             'lambda',
             aws_access_key_id=aws_access_key_id,
