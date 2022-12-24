@@ -1,5 +1,3 @@
-import json
-
 import boto3
 from google.protobuf.json_format import MessageToJson
 
@@ -22,25 +20,16 @@ def _handle_get_video_metadata(
         video_metadata = driver.get_video_metadata(video_id)
         print(f"Retrieved the video metadata for video id {video_id}")
         return {
-            'headers': {
-                'Content-Type': 'application/json'
-            },
             'statusCode': 200,
             'body': MessageToJson(video_metadata)
         }
     except VimeoUploaderInvalidVideoIdError:
         return {
-            'headers': {
-                'Content-Type': 'application/json'
-            },
             'statusCode': 404,
             'errorMessage': f"Failed to get metadata with video id {video_id} because it is invalid"
         }
     except VimeoUploaderInternalServerError:
         return {
-            'headers': {
-                'Content-Type': 'text/plain'
-            },
             'statusCode': 500,
             'errorMessage': f"Failed to get metadata with video id {video_id} due to some internal server error"}
 
@@ -95,16 +84,10 @@ def _handle_process_video_upload(
             title,
             download)
         return {
-            'headers': {
-                'Content-Type': 'application/json'
-            },
             'statusCode': 200,
             'body': MessageToJson(video_process_result)
         }
     except VimeoUploaderInternalServerError:
         return {
-            'headers': {
-                'Content-Type': 'text/plain'
-            },
             'statusCode': 500,
             'errorMessage': f"Failed to process the video with id {video_id} due to some internal server error"}
