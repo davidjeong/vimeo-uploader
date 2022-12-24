@@ -1,23 +1,25 @@
 """
 Main entry for GUI
 """
-
+import base64
 import logging
-import shutil
+import os
+import platform
 import sys
 import threading
+import webbrowser
 from dataclasses import dataclass
 from tkinter import Tk, Menu, StringVar, messagebox, LEFT, W, filedialog, Button, ttk, BooleanVar
 
-import vimeo
-from pytube.exceptions import VideoUnavailable
+import yaml
 
-from core.driver import Driver, initialize_directories
-from core.streaming_service import SupportedServices
-from core.util import get_vimeo_client_configuration, get_video_configuration
-from model.exception import VimeoClientConfigurationException, UnsetConfigurationException
+from client import VimeoUploaderLambdaClient
+from gui.util import get_seconds
+from model.config import AwsCredentials
 
 EMPTY_RESOLUTION = ['N/A']
+APP_DIRECTORY_NAME = "Vimeo Uploader"
+CREDENTIALS_FILE_NAME = "credentials.yaml"
 
 
 def _about() -> None:
@@ -37,24 +39,40 @@ class ThumbnailHandler:
 
 def _process_video() -> None:
     def process():
-        try:
-            vimeo_client_config = get_vimeo_client_configuration(
-                app_directory_config.get_vimeo_config_file_path())
-            video_config = get_video_configuration(
-                video_id_str.get(),
-                start_time.get().strip(),
-                end_time.get().strip(),
-                resolution.get(),
-                title.get(),
-                thumbnail_handler.thumbnail_path)
-            driver.update_vimeo_client_config(vimeo_client_config)
-            driver.process(video_config)
-            messagebox.showinfo(
-                "Upload status",
-                f"Finished uploading video to Vimeo for YouTube video with ID [{video_config.video_id}]")
-        except vimeo.exceptions.VideoUploadFailure:
-            messagebox.showerror(
-                'Error', 'Failed to process the video with input configuration!')
+        download_platform = "youtube"
+        upload_platform = "vimeo"
+        video_id = video_id_str.get()
+        start_time_in_sec = get_seconds(start_time.get())
+        end_time_in_sec = get_seconds(end_time.get())
+        image_path = thumbnail_handler.thumbnail_path
+        if image_path:
+            with open(image_path, 'rb') as image_file:
+                image_content = base64.b64encode(
+                    image_file.read()).decode("utf-8")
+            image_name = os.path.basename(image_path)
+        else:
+            image_content = None
+            image_name = None
+        resolution = resolution_text.get()
+        title = title_entry.get()
+        download = False
+        video_process_result = lambda_client.process_video(
+            download_platform,
+            upload_platform,
+            video_id,
+            start_time_in_sec,
+            end_time_in_sec,
+            image_content,
+            image_name,
+            resolution,
+            title,
+            download)
+        # Open the url in browser, if possible
+        if video_process_result.upload_url:
+            webbrowser.open_new(video_process_result.upload_url)
+        messagebox.showinfo(
+            "Upload status",
+            f"Finished uploading video to Vimeo for YouTube video with ID [{video_id}]")
 
     _disable_process_button()
     thread = threading.Thread(target=process)
@@ -70,25 +88,6 @@ def _get_thumbnail() -> None:
             '', thumbnail_handler.thumbnail_path):
         image_text.set('Thumbnail path: ' + new_thumbnail_path)
         thumbnail_handler.thumbnail_path = new_thumbnail_path
-
-
-def _import_vimeo_client_config_yaml() -> None:
-    filename = filedialog.askopenfilename(
-        title='Select config file for Vimeo client', filetypes=[
-            ('Vimeo config files', '*.bin')])
-    try:
-        driver.update_vimeo_client_config(
-            get_vimeo_client_configuration(filename))
-        # Copy the file over to target config path
-        shutil.copy(
-            filename,
-            app_directory_config.get_vimeo_config_file_path())
-    except UnsetConfigurationException:
-        logging.warning("Configuration path is not set")
-    except PermissionError:
-        logging.error("Permission error to read or copy the file")
-    except VimeoClientConfigurationException:
-        logging.error("Config file is not valid format")
 
 
 def _enable_process_button() -> None:
@@ -112,21 +111,6 @@ def _check_if_done(thread):
         _schedule_check(thread)
 
 
-def _check_if_requirements_met() -> None:
-    """
-    Check if requirements to run the uploader is satisfied
-    :return:
-    """
-    ffmpeg_exists = shutil.which("ffmpeg") is not None
-    if not ffmpeg_exists:
-        logging.info("User does not have FFmpeg installed")
-        messagebox.showerror(
-            'Error',
-            'System requirements are not met. FFmpeg is required to be downloaded for the application to run.\n'
-            'Please download from https://ffmpeg.org/')
-        sys.exit(1)
-
-
 def _enable_all_forms() -> None:
     start_entry['state'] = 'enabled'
     end_entry['state'] = 'enabled'
@@ -148,7 +132,7 @@ def _clear_all_forms() -> None:
     end_time.set("")
     image_text.set("Path to thumbnail image (optional)")
     thumbnail_handler.thumbnail_path = ""
-    title.set("")
+    title_text.set("")
 
 
 def _get_video_metadata(video_id: str) -> None:
@@ -157,9 +141,9 @@ def _get_video_metadata(video_id: str) -> None:
         for item in video_resolutions:
             resolution_option["menu"].add_command(
                 label=item,
-                command=lambda value=item: resolution.set(value)
+                command=lambda value=item: resolution_text.set(value)
             )
-        resolution.set(video_resolutions[-1])
+        resolution_text.set(video_resolutions[-1])
 
     def format_time(seconds):
         minutes, seconds = divmod(seconds, 60)
@@ -181,43 +165,62 @@ def _get_video_metadata(video_id: str) -> None:
     def _get_resolution_sort_key(res: str) -> int:
         return int(res[:-1])
 
-    proceed = False
-    try:
-        video_metadata = driver.get_video_metadata(
-            input_service, video_id)
-        proceed = _process_video_information()
-    except VideoUnavailable as error:
-        logging.warning(error)
-    finally:
-        if proceed:
-            video_resolutions = sorted(
-                [res for res in video_metadata.resolutions if res], key=_get_resolution_sort_key)
-            _enable_all_forms()
-        else:
-            video_resolutions = ['N/A']
-            _clear_all_forms()
-            _disable_all_forms()
-        _update_video_resolution_dropdown()
+    video_metadata = lambda_client.get_video_metadata("youtube", video_id)
+    proceed = _process_video_information()
+    if proceed:
+        video_resolutions = sorted(
+            [res for res in video_metadata.resolutions if res], key=_get_resolution_sort_key)
+        _enable_all_forms()
+    else:
+        video_resolutions = ['N/A']
+        _clear_all_forms()
+        _disable_all_forms()
+    _update_video_resolution_dropdown()
 
 
-_check_if_requirements_met()
+def fetch_aws_credentials() -> AwsCredentials:
+    """
+    Initialize the folders and configuration files
+    :return:
+    """
+    ops = platform.system()
+    if ops == 'Windows':
+        documents_folder = 'My Documents'
+    elif ops == 'Darwin':
+        documents_folder = 'Documents'
+    else:
+        logging.info("Running on unsupported os %s", ops)
+        sys.exit(1)
+    root_dir = os.path.join(
+        os.path.expanduser('~'),
+        documents_folder,
+        APP_DIRECTORY_NAME)
+    if not os.path.exists(root_dir):
+        logging.info("Creating dir under %s", root_dir)
+        os.mkdir(root_dir)
+    credentials_path = os.path.join(root_dir, CREDENTIALS_FILE_NAME)
+    if not os.path.exists(credentials_path):
+        print(f"Credentials file is not available at path {credentials_path}")
+        sys.exit(1)
+    with open(credentials_path, 'rb') as credentials_file:
+        yaml_string = credentials_file.read()
+    credentials_yaml = yaml.safe_load(yaml_string)
+    if 'aws_access_key_id' not in credentials_yaml:
+        print("aws_access_key_id is not present in credentials file")
+        sys.exit(1)
+    if 'aws_secret_access_key' not in credentials_yaml:
+        print("aws_secret_access_key is not present in credentials file")
+        sys.exit(1)
+    return AwsCredentials(
+        aws_access_key_id=credentials_yaml["aws_access_key_id"],
+        aws_secret_access_key=credentials_yaml["aws_secret_access_key"])
 
-driver = Driver()
+
+aws_credentials = fetch_aws_credentials()
+lambda_client = VimeoUploaderLambdaClient(
+    aws_credentials.aws_access_key_id,
+    aws_credentials.aws_secret_access_key)
 thumbnail_handler = ThumbnailHandler()
-app_directory_config = initialize_directories()
-driver.update_app_directory_config(app_directory_config)
-try:
-    driver.update_vimeo_client_config(
-        get_vimeo_client_configuration(
-            app_directory_config.get_vimeo_config_file_path()))
-except UnsetConfigurationException:
-    logging.error("Failed to get the config file from path")
-
-input_service: SupportedServices = SupportedServices.YOUTUBE
-output_service: SupportedServices = SupportedServices.VIMEO
-
-driver.update_download_service(input_service)
-driver.update_upload_service(output_service)
 
 # Root element
 root = Tk()
@@ -229,8 +232,8 @@ video_information_str = StringVar()
 start_time = StringVar()
 end_time = StringVar()
 image_text = StringVar()
-resolution = StringVar()
-title = StringVar()
+resolution_text = StringVar()
+title_text = StringVar()
 
 # Boolean Var
 input_youtube_source = BooleanVar()
@@ -293,7 +296,7 @@ resolution_label = ttk.Label(
         'Helvetica', 10), justify=LEFT)
 resolution_option = ttk.OptionMenu(
     root,
-    resolution,
+    resolution_text,
     EMPTY_RESOLUTION[0],
     *EMPTY_RESOLUTION)
 title_label = ttk.Label(
@@ -301,7 +304,7 @@ title_label = ttk.Label(
         'Helvetica', 10), justify=LEFT)
 title_entry = ttk.Entry(
     root,
-    textvariable=title,
+    textvariable=title_text,
     font=(
         'Helvetica',
         10),
@@ -333,30 +336,15 @@ input_video_source.add_checkbutton(
     onvalue=1,
     offvalue=0,
     variable=input_youtube_source)
-# input_video_source.add_checkbutton(label='Vimeo')
 
 output_video_source = Menu(menubar, tearoff=0)
-# output_video_source.add_checkbutton(label='YouTube')
 output_video_source.add_checkbutton(
     label='Vimeo',
     onvalue=1,
     offvalue=0,
     variable=output_vimeo_source)
 
-source = Menu(menubar, tearoff=0)
-source.add_cascade(
-    label='Input Video Service',
-    menu=input_video_source)
-source.add_cascade(
-    label='Output Video Service',
-    menu=output_video_source)
-source.add_separator()
-source.add_command(
-    label='Import Vimeo Config',
-    command=_import_vimeo_client_config_yaml)
-
 menubar.add_cascade(label='File', menu=file)
-menubar.add_cascade(label='Service Configuration', menu=source)
 
 root.config(menu=menubar)
 video_id_str.trace(
