@@ -8,7 +8,6 @@ from core.exceptions import VimeoUploaderInternalServerError, VimeoUploaderInval
 
 
 def handle_get_video_metadata(event, context):
-    print(event['queryStringParameters'])
     platform = event['queryStringParameters']['platform']
     video_id = event['queryStringParameters']['video_id']
     driver = Driver(download_platform=get_streaming_platform(platform))
@@ -46,7 +45,6 @@ def _handle_get_video_metadata(
 
 
 def handle_process_video_upload(event, context):
-    print(event['body'])
     body = json.loads(event['body'])
     download_platform = body['download_platform']
     upload_platform = body['upload_platform']
