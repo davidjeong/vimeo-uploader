@@ -3,12 +3,18 @@ name: Run Python Sanity for Lambda
 on:
   pull_request:
     paths-ignore:
+      - '.gitignore'
       - '**/README.md'
+      - 'vimeo-uploader-python/**'
+      - 'vimeo-uploader-swift/**'
   push:
     branches:
       - main
     paths-ignore:
+      - '.gitignore'
       - '**/README.md'
+      - 'vimeo-uploader-python/**'
+      - 'vimeo-uploader-swift/**'
 
 jobs:
   test:
