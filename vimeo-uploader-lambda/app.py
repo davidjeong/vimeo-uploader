@@ -8,6 +8,7 @@ from core.exceptions import VimeoUploaderInternalServerError, VimeoUploaderInval
 
 
 def handle_get_video_metadata(event, context):
+    print(event['queryStringParameters'])
     platform = event['queryStringParameters']['platform']
     video_id = event['queryStringParameters']['video_id']
     driver = Driver(download_platform=get_streaming_platform(platform))
@@ -45,17 +46,17 @@ def _handle_get_video_metadata(
 
 
 def handle_process_video_upload(event, context):
-    body = json.loads(event['body'])
-    download_platform = body['download_platform']
-    upload_platform = body['upload_platform']
-    video_id = body['video_id']
-    start_time_in_sec = body['start_time_in_sec']
-    end_time_in_sec = body['end_time_in_sec']
-    image_content = body['image_content']
-    image_name = body['image_name']
-    resolution = body['resolution']
-    title = body['title']
-    download = bool(body['download'])
+    print(event['body'])
+    download_platform = event['body']['download_platform']
+    upload_platform = event['body']['upload_platform']
+    video_id = event['body']['video_id']
+    start_time_in_sec = event['body']['start_time_in_sec']
+    end_time_in_sec = event['body']['end_time_in_sec']
+    image_content = event['body']['image_content']
+    image_name = event['body']['image_name']
+    resolution = event['body']['resolution']
+    title = event['body']['title']
+    download = event['body']['download']
     s3_client = boto3.client('s3')
     driver = Driver(
         s3_client,
