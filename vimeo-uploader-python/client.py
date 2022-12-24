@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 
 import boto3
+import botocore
 from botocore.client import logger
 from botocore.exceptions import ClientError
 from google.protobuf.json_format import ParseDict
@@ -26,11 +27,16 @@ class VimeoUploaderLambdaClient:
         :param aws_access_key_id: AWS access key id
         :param aws_secret_access_key: AWS secret access key
         """
+        config = botocore.config.Config(
+            retries={'max_attempts': 0},
+            read_timeout=60 * 10,
+            connect_timeout=60 * 10,
+            region_name="us-east-1")
         self.lambda_client = boto3.client(
             'lambda',
+            config=config,
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,
-            region_name='us-east-1'
         )
 
     def get_video_metadata(
