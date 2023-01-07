@@ -25,7 +25,10 @@ struct ContentView: View {
         Grid {
             GridRow {
                 Text("Video ID")
-                TextField("e.g. XsX3ATc3FbA", text: $videoId)
+                TextField("e.g. XsX3ATc3FbA", text: $videoId).onChange(of: videoId, perform: { newValue in
+                    // Call Lambda here
+                    print("Video id is \(videoId)")
+                })
             }.padding()
             Divider()
             Group {
