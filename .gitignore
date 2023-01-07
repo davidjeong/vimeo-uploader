@@ -230,3 +230,6 @@ ffmpeg*
 
 # Protobuf
 **/generated/*_pb2.*
+
+# xcsharedata
+**/xcshareddata/**
