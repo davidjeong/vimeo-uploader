@@ -14,6 +14,8 @@
 		E90BF2D52956CE4600304703 /* vimeo_uploader_swiftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90BF2D42956CE4600304703 /* vimeo_uploader_swiftTests.swift */; };
 		E90BF2DF2956CE4600304703 /* vimeo_uploader_swiftUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90BF2DE2956CE4600304703 /* vimeo_uploader_swiftUITests.swift */; };
 		E90BF2E12956CE4600304703 /* vimeo_uploader_swiftUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90BF2E02956CE4600304703 /* vimeo_uploader_swiftUITestsLaunchTests.swift */; };
+		E95D9655296939BD007C2F07 /* AWSLambda in Frameworks */ = {isa = PBXBuildFile; productRef = E95D9654296939BD007C2F07 /* AWSLambda */; };
+		E95D9657296939BD007C2F07 /* AWSS3 in Frameworks */ = {isa = PBXBuildFile; productRef = E95D9656296939BD007C2F07 /* AWSS3 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,6 +54,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E95D9657296939BD007C2F07 /* AWSS3 in Frameworks */,
+				E95D9655296939BD007C2F07 /* AWSLambda in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -145,6 +149,10 @@
 			dependencies = (
 			);
 			name = "vimeo-uploader-swift";
+			packageProductDependencies = (
+				E95D9654296939BD007C2F07 /* AWSLambda */,
+				E95D9656296939BD007C2F07 /* AWSS3 */,
+			);
 			productName = "vimeo-uploader-swift";
 			productReference = E90BF2BF2956CE4600304703 /* vimeo-uploader-swift.app */;
 			productType = "com.apple.product-type.application";
@@ -217,6 +225,9 @@
 				Base,
 			);
 			mainGroup = E90BF2B62956CE4600304703;
+			packageReferences = (
+				E95D9653296939BD007C2F07 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */,
+			);
 			productRefGroup = E90BF2C02956CE4600304703 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -568,6 +579,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E95D9653296939BD007C2F07 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/awslabs/aws-sdk-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.8.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E95D9654296939BD007C2F07 /* AWSLambda */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E95D9653296939BD007C2F07 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
+			productName = AWSLambda;
+		};
+		E95D9656296939BD007C2F07 /* AWSS3 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E95D9653296939BD007C2F07 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
+			productName = AWSS3;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E90BF2B72956CE4600304703 /* Project object */;
 }
