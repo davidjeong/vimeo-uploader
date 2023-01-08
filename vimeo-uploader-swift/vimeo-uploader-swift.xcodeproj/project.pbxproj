@@ -14,8 +14,8 @@
 		E90BF2D52956CE4600304703 /* vimeo_uploader_swiftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90BF2D42956CE4600304703 /* vimeo_uploader_swiftTests.swift */; };
 		E90BF2DF2956CE4600304703 /* vimeo_uploader_swiftUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90BF2DE2956CE4600304703 /* vimeo_uploader_swiftUITests.swift */; };
 		E90BF2E12956CE4600304703 /* vimeo_uploader_swiftUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90BF2E02956CE4600304703 /* vimeo_uploader_swiftUITestsLaunchTests.swift */; };
+		E93CC98A2969DAF800FEC458 /* VimeoUploaderLambdaClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E93CC9892969DAF800FEC458 /* VimeoUploaderLambdaClient.swift */; };
 		E95D9655296939BD007C2F07 /* AWSLambda in Frameworks */ = {isa = PBXBuildFile; productRef = E95D9654296939BD007C2F07 /* AWSLambda */; };
-		E95D9657296939BD007C2F07 /* AWSS3 in Frameworks */ = {isa = PBXBuildFile; productRef = E95D9656296939BD007C2F07 /* AWSS3 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,6 +47,7 @@
 		E90BF2DA2956CE4600304703 /* vimeo-uploader-swiftUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "vimeo-uploader-swiftUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E90BF2DE2956CE4600304703 /* vimeo_uploader_swiftUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = vimeo_uploader_swiftUITests.swift; sourceTree = "<group>"; };
 		E90BF2E02956CE4600304703 /* vimeo_uploader_swiftUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = vimeo_uploader_swiftUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		E93CC9892969DAF800FEC458 /* VimeoUploaderLambdaClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VimeoUploaderLambdaClient.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,7 +55,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E95D9657296939BD007C2F07 /* AWSS3 in Frameworks */,
 				E95D9655296939BD007C2F07 /* AWSLambda in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -83,6 +83,7 @@
 				E90BF2D32956CE4600304703 /* vimeo-uploader-swiftTests */,
 				E90BF2DD2956CE4600304703 /* vimeo-uploader-swiftUITests */,
 				E90BF2C02956CE4600304703 /* Products */,
+				E93CC98B2969DC3700FEC458 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -104,6 +105,7 @@
 				E90BF2C62956CE4600304703 /* Assets.xcassets */,
 				E90BF2CB2956CE4600304703 /* vimeo_uploader_swift.entitlements */,
 				E90BF2C82956CE4600304703 /* Preview Content */,
+				E93CC9892969DAF800FEC458 /* VimeoUploaderLambdaClient.swift */,
 			);
 			path = "vimeo-uploader-swift";
 			sourceTree = "<group>";
@@ -133,6 +135,13 @@
 			path = "vimeo-uploader-swiftUITests";
 			sourceTree = "<group>";
 		};
+		E93CC98B2969DC3700FEC458 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -151,7 +160,6 @@
 			name = "vimeo-uploader-swift";
 			packageProductDependencies = (
 				E95D9654296939BD007C2F07 /* AWSLambda */,
-				E95D9656296939BD007C2F07 /* AWSS3 */,
 			);
 			productName = "vimeo-uploader-swift";
 			productReference = E90BF2BF2956CE4600304703 /* vimeo-uploader-swift.app */;
@@ -270,6 +278,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E93CC98A2969DAF800FEC458 /* VimeoUploaderLambdaClient.swift in Sources */,
 				E90BF2C52956CE4600304703 /* ContentView.swift in Sources */,
 				E90BF2C32956CE4600304703 /* vimeo_uploader_swiftApp.swift in Sources */,
 			);
@@ -433,6 +442,8 @@
 				DEVELOPMENT_ASSET_PATHS = "\"vimeo-uploader-swift/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Vimeo Uploader";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -458,6 +469,8 @@
 				DEVELOPMENT_ASSET_PATHS = "\"vimeo-uploader-swift/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Vimeo Uploader";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -596,11 +609,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E95D9653296939BD007C2F07 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
 			productName = AWSLambda;
-		};
-		E95D9656296939BD007C2F07 /* AWSS3 */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E95D9653296939BD007C2F07 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
-			productName = AWSS3;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
