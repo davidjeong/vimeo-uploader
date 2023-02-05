@@ -29,7 +29,9 @@ jobs:
       with:
         python-version: "3.9"
     - name: Install FFMpeg
-      run: sudo apt-get install ffmpeg
+      run: |
+        sudo apt-get upgrade
+        sudo apt-get install ffmpeg
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
