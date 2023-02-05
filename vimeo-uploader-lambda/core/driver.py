@@ -10,6 +10,7 @@ from botocore.exceptions import NoCredentialsError
 from core.exceptions import VimeoUploaderInternalServerError
 from core.generated import model_pb2
 from core.streaming_platform import YouTubePlatform, VimeoPlatform, StreamingPlatform, SupportedPlatform
+from core.transformation import TrimTransformation
 
 STREAMING_PLATFORMS = {
     SupportedPlatform.YOUTUBE.name.lower(): YouTubePlatform(),
@@ -108,12 +109,8 @@ class Driver:
                 "Failed to download the video")
 
         if os.path.exists(combined_video_path):
-            trim_resource(
-                combined_video_path,
-                trimmed_video_path,
-                start_time_in_sec,
-                end_time_in_sec
-            )
+            trim_transformation = TrimTransformation(start_time_in_sec, end_time_in_sec)
+            trim_transformation.apply(combined_video_path, trimmed_video_path)
             logging.info("Finished trimming the video")
 
         if image_content:
