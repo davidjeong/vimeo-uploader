@@ -45,7 +45,7 @@ class VimeoUploaderLambdaClient {
             // Try creating lambda client. If this is not possible the application needs to quit.
             self.lambdaClient = try LambdaClient(region: "us-east-1")
         } catch {
-            dump(error, name: "Error instatiating LambdaClient")
+            dump(error, name: "init-error")
             exit(1)
         }
     }
@@ -95,7 +95,7 @@ class VimeoUploaderLambdaClient {
                 return try JSONDecoder().decode(VideoProcessResult.self, from: JSONSerialization.data(withJSONObject: dict))
             }
         } catch {
-            dump(error, name: "")
+            dump(error, name: "process-video-error")
         }
         return nil
     }
@@ -121,7 +121,7 @@ class VimeoUploaderLambdaClient {
                 return try JSONSerialization.jsonObject(with: dataStringData) as? [String: Any]
             }
         } catch {
-            dump(error, name: "")
+            dump(error, name: "invoke-lambda-function-error")
         }
         return nil
     }
