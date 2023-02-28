@@ -135,6 +135,11 @@ struct ContentView: View {
                             resolution: resolution,
                             title: title,
                             download: download)
+                        if let urlString = videoProcessResult?.uploadUrl {
+                            if let uploadUrl = URL(string: urlString) {
+                                NSWorkspace.shared.open(uploadUrl)
+                            }
+                        }
                         inProgress = false
                     }
                 })
