@@ -14,6 +14,9 @@ struct ContentView: View {
     private let client = VimeoUploaderLambdaClient()
     private let emptyResolutions = ["N/A"]
     
+    @State private var isConfirming: Bool = false
+    @State private var videoMetadata: VideoMetadata?
+
     @State private var videoId: String = ""
     @State private var startTime: String = ""
     @State private var endTime: String = ""
@@ -34,19 +37,38 @@ struct ContentView: View {
                     .onChange(of: videoId, perform: { newValue in
                         print("Video id is \(videoId)")
                         Task {
-                            let videoMetadata = await client.getVideoMetadata(platform: "youtube", videoId: videoId)
-                            if videoMetadata != nil {
-                                if let fetchedResolutions = videoMetadata?.resolutions {
-                                    resolutions = fetchedResolutions.reversed()
-                                    resolution = resolutions[0]
-                                }
-                                disableVideoInputs = false
+                            let fetchedMetadata = await client.getVideoMetadata(platform: "youtube", videoId: videoId)
+                            if fetchedMetadata != nil {
+                                videoMetadata = fetchedMetadata
+                                isConfirming = true
                             } else {
                                 resetInputs()
                                 disableVideoInputs = true
                             }
                         }
-                    }).disabled(inProgress)
+                    })
+                    .disabled(inProgress)
+                    .confirmationDialog(
+                        """
+                        Are you sure you want to use this video?
+                        Title: \(videoMetadata?.title ?? "N/A")
+                        Author: \(videoMetadata?.author ?? "N/A")
+                        Upload Date: \(videoMetadata?.publishDate ?? "N/A")
+                        """,
+                        isPresented: $isConfirming
+                    ) {
+                        Button("Use") {
+                            if let fetchedResolutions = videoMetadata?.resolutions {
+                                resolutions = fetchedResolutions.reversed()
+                                resolution = resolutions[0]
+                            }
+                            disableVideoInputs = false
+                        }
+                        Button("Cancel", role: .cancel) {
+                            resetInputs()
+                            disableVideoInputs = true
+                        }
+                    }
             }.padding()
             Divider()
             Group {
