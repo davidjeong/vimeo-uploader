@@ -39,7 +39,7 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Temporary fix for YouTube regex
       run: |
-        sed -i 's/transform_plan_raw =.*/transform_plan_raw = js/g' /usr/local/lib/python3.9/site-packages/pytube/cipher.py
+        sed -i 's/transform_plan_raw =.*/transform_plan_raw = js/g' /opt/hostedtoolcache/Python/3.9.16/x64/lib/python3.9/site-packages/pytube/cipher.py
     - name: Download and install the protobuf compiler
       run: |
         wget --tries=5 --connect-timeout=5 -O protoc-linux-x86_64.zip \
