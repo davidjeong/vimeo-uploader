@@ -8,7 +8,7 @@ RUN sed -i 's/transform_plan_raw =.*/transform_plan_raw = js/g' pytube/cipher.py
 
 COPY app.py ${LAMBDA_TASK_ROOT}
 COPY core ${LAMBDA_TASK_ROOT}/core
-COPY ffmpeg-5.1.1-amd64-static /usr/local/bin/ffmpeg
+COPY ffmpeg-*-amd64-static /usr/local/bin/ffmpeg
 
 ENV PATH "${PATH}:/usr/local/bin/ffmpeg"
 
