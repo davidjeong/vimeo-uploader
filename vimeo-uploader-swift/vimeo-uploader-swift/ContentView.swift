@@ -20,14 +20,12 @@ struct ContentView: View {
     @State private var videoId: String = ""
     @State private var startTime: String = ""
     @State private var endTime: String = ""
-    @State private var imageUrl: URL? = nil
-    @State private var resolution: String = ""
+    @State private var imageIdentifier: String = ""
     @State private var title: String = ""
     @State private var download: Bool = false
     
     @State private var disableVideoInputs = true
     @State private var inProgress = false
-    @State private var resolutions: [String] = ["N/A"]
     
     var body: some View {
         Grid {
@@ -36,6 +34,8 @@ struct ContentView: View {
                 TextField("e.g. XsX3ATc3FbA", text: $videoId)
                     .onChange(of: videoId, perform: { newValue in
                         print("Video id is \(videoId)")
+                        resetInputs()
+                        disableVideoInputs = true
                         Task {
                             let fetchedMetadata = await client.getVideoMetadata(platform: "youtube", videoId: videoId)
                             if fetchedMetadata != nil {
@@ -58,10 +58,6 @@ struct ContentView: View {
                         isPresented: $isConfirming
                     ) {
                         Button("Use") {
-                            if let fetchedResolutions = videoMetadata?.resolutions {
-                                resolutions = fetchedResolutions.reversed()
-                                resolution = resolutions[0]
-                            }
                             disableVideoInputs = false
                         }
                         Button("Cancel", role: .cancel) {
@@ -98,23 +94,12 @@ struct ContentView: View {
                         if (dialog.runModal() == NSApplication.ModalResponse.OK) {
                             let result = dialog.url
                             if result != nil {
-                                imageUrl = result
+                                imageIdentifier = ""
                             } else {
                                 return
                             }
                         }
                     }).disabled(disableVideoInputs || inProgress)
-                }.padding()
-                Divider()
-                GridRow {
-                    Text("Video Resolution")
-                    Picker("", selection: $resolution) {
-                        ForEach(resolutions, id: \.self) {
-                            Text($0)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .disabled(disableVideoInputs || inProgress)
                 }.padding()
                 Divider()
                 GridRow {
@@ -139,22 +124,13 @@ struct ContentView: View {
                         print("Firing off task")
                         let startTimeInSec = getSeconds(time: startTime)
                         let endTimeInSec = getSeconds(time: endTime)
-                        var imageContent: String?
-                        var imageName: String?
-                        if let url = imageUrl {
-                            let imageData = try Data.init(contentsOf: url)
-                            imageContent = imageData.base64EncodedString(options: .lineLength64Characters)
-                            imageName = url.lastPathComponent
-                        }
                         let videoProcessResult = await client.processVideo(
                             downloadPlatform: "youtube",
                             uploadPlatform: "vimeo",
                             videoId: videoId,
                             startTimeInSec: startTimeInSec,
                             endTimeInSec: endTimeInSec,
-                            imageContent: imageContent,
-                            imageName: imageName,
-                            resolution: resolution,
+                            imageIdentifier: "",
                             title: title,
                             download: download)
                         if let urlString = videoProcessResult?.uploadUrl {
@@ -180,11 +156,9 @@ struct ContentView: View {
     }
     
     private func resetInputs() {
-        resolutions = emptyResolutions
         startTime = ""
         endTime = ""
-        resolution = ""
-        imageUrl = nil
+        imageIdentifier = ""
         title = ""
         download = false
     }
