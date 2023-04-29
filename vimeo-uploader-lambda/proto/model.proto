@@ -8,7 +8,6 @@ message VideoMetadata {
   string author = 3;
   int32 length_in_sec = 4;
   string publish_date = 5;
-  repeated string resolutions = 6;
 }
 
 message VideoProcessResult {

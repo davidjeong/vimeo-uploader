@@ -1,16 +1,14 @@
-import base64
 import logging
 import os
 from datetime import date
 
-import ffmpeg
+import boto3
 from botocore.client import BaseClient
 from botocore.exceptions import NoCredentialsError
 
 from core.exceptions import VimeoUploaderInternalServerError
 from core.generated import model_pb2
 from core.streaming_platform import YouTubePlatform, VimeoPlatform, StreamingPlatform, SupportedPlatform
-from core.transformation import TrimTransformation
 
 STREAMING_PLATFORMS = {
     SupportedPlatform.YOUTUBE.name.lower(): YouTubePlatform(),
@@ -55,7 +53,6 @@ class Driver:
             video_id: str) -> model_pb2.VideoMetadata:
         """
         Get video metadata from download platform.
-
         :param video_id: ID of the video
         :return: Video metadata from video service for video ID
         """
@@ -66,9 +63,7 @@ class Driver:
             video_id: str,
             start_time_in_sec: int,
             end_time_in_sec: int,
-            image_content: str,
-            image_file_name: str,
-            resolution: str,
+            image_identifier: str,
             title: str,
             download: bool) -> model_pb2.VideoProcessResult:
         """
@@ -77,9 +72,7 @@ class Driver:
         :param video_id: ID of the video
         :param start_time_in_sec: Start time of trim in seconds
         :param end_time_in_sec: End time of trim in seconds
-        :param image_content: Content of the thumbnail
-        :param image_file_name: Name of the thumbnail image
-        :param resolution: Resolution of the final video
+        :param image_identifier: Unique identifier on S3, for image
         :param title: Title of the video
         :param download: True if download the video, false otherwise
         :return:
@@ -89,45 +82,34 @@ class Driver:
             current_date = today.strftime("%m/%d/%y")
             title = f"(CW) {current_date}"
 
-        suffix = f"{str(start_time_in_sec)}_{str(end_time_in_sec)}_{resolution}"
-        combined_video_name = f"combined_{resolution}.mp4"
-        trimmed_video_name = f"{video_id}_{suffix}.mp4"
+        suffix = f"{str(start_time_in_sec)}_{str(end_time_in_sec)}"
+        video_name = f"{video_id}_{suffix}.mp4"
         s3_object_key = f"{video_id}_{suffix}"
-
         download_path = os.path.join("/tmp", video_id)
-        if not os.path.exists(download_path):
-            logging.info("Creating directory %s", download_path)
-            os.mkdir(download_path)
-        combined_video_path = os.path.join(download_path, combined_video_name)
-        trimmed_video_path = os.path.join(download_path, trimmed_video_name)
 
         downloaded = self.download_platform.download_video(
-            video_id, resolution, download_path, combined_video_name)
+            video_id, start_time_in_sec, end_time_in_sec, download_path, video_name)
 
         if not downloaded:
             raise VimeoUploaderInternalServerError(
                 "Failed to download the video")
 
-        if os.path.exists(combined_video_path):
-            trim_transformation = TrimTransformation(start_time_in_sec, end_time_in_sec)
-            trim_transformation.apply(combined_video_path, trimmed_video_path)
-            logging.info("Finished trimming the video")
+        video_path = os.path.join(download_path, video_name)
 
-        if image_content:
-            image_path = self._write_image_stream_to_file(
-                image_content, '/tmp', image_file_name)
+        if image_identifier:
+            image_path = self._download_image_to_file(image_identifier, '/tmp')
         else:
             image_path = None
 
         if self.allow_upload:
             upload_url = self.upload_platform.upload_video(
-                trimmed_video_path, title, image_path)
+                video_path, title, image_path)
         else:
             upload_url = None
 
         if self.allow_download and download:
             download_url = self._upload_file_to_s3(
-                s3_object_key, trimmed_video_path)
+                s3_object_key, video_path, os.environ['S3_VIDEO_BUCKET_NAME'])
         else:
             download_url = None
 
@@ -138,12 +120,21 @@ class Driver:
             download_url=download_url,
             upload_url=upload_url)
 
+    def upload_file_to_s3(self, object_key: str, object_path: str) -> str:
+        """
+        Upload file to s3
+        """
+        return self._upload_file_to_s3(
+            object_key,
+            object_path,
+            os.environ['S3_THUMBNAIL_BUCKET_NAME'])
+
     def _upload_file_to_s3(
-        self,
-        object_key: str,
-        object_path: str,
-        expires_in: int = 6 *
-            3600) -> str:
+            self,
+            object_key: str,
+            object_path: str,
+            bucket_name: str,
+            expires_in: int = 6 * 3600) -> str:
         """
         Upload file to S3.
 
@@ -154,11 +145,11 @@ class Driver:
         """
         try:
             self.s3_client.upload_file(object_path,
-                                       os.environ['S3_BUCKET_NAME'],
+                                       bucket_name,
                                        object_key)
             url = self.s3_client.generate_presigned_url(
                 ClientMethod='get_object', Params={
-                    'Bucket': os.environ['S3_BUCKET_NAME'],
+                    'Bucket': bucket_name,
                     'Key': object_key,
                 },
                 ExpiresIn=expires_in
@@ -172,43 +163,20 @@ class Driver:
         return url
 
     @staticmethod
-    def _write_image_stream_to_file(
-            image_content: str,
-            root_path: str,
-            file_name: str) -> str:
+    def _download_image_to_file(
+            image_identifier: str,
+            root_path: str) -> str:
         """
-        Write image stream to file specified by path.
+        Download image from S3 (with image identifier) to disk.
 
-        :param image_content: Content stream of image (in base64)
+        :param image_identifier: Image identifier on S3.
         :param root_path: Root path of file
-        :param file_name: Name of the original file
         :return:
         """
-        image_path = os.path.join(root_path, file_name)
-        with open(image_path, 'wb') as file:
-            file.write(base64.b64decode(image_content.encode('utf-8')))
+        s3 = boto3.resource('s3')
+        image_path = os.path.join(root_path, image_identifier)
+        s3.meta.download_file(
+            os.environ['S3_THUMBNAIL_BUCKET_NAME'],
+            image_identifier,
+            image_path)
         return image_path
-
-
-def trim_resource(
-        input_path: str,
-        output_path: str,
-        start_time_in_sec: int,
-        end_time_in_sec: int) -> None:
-    """
-    Trim the resource based on start and end time in seconds.
-
-    :param input_path:
-    :param output_path:
-    :param start_time_in_sec:
-    :param end_time_in_sec:
-    :return:
-    """
-    input_video = ffmpeg.input(input_path)
-    ffmpeg.output(
-        input_video,
-        output_path,
-        ss=start_time_in_sec,
-        to=end_time_in_sec,
-        vcodec='copy',
-        acodec='copy').run()

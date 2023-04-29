@@ -16,52 +16,53 @@ def test_youtube_platform_get_video_metadata() -> None:
     assert video_metadata.author == "HYBE LABELS"
     assert video_metadata.length_in_sec == 253
     assert video_metadata.publish_date == "2019-04-12"
-    assert video_metadata.resolutions == [
-        "144p", "240p", "360p", "480p", "720p", "1080p"]
 
 
-def test_download_youtube_resources_and_combine_short(tmpdir) -> None:
+def test_download_youtube_resources_short(tmpdir) -> None:
     """
-    Test download short resources from YouTube, merging the video/audio.
+    Test download short resources from YouTube, merging the video/audio, then trimming.
     :return: Nothing
     """
     # BTS (방탄소년단) '작은 것들을 위한 시 (Boy With Luv) (feat. Halsey)' Official MV
-    _test_download_youtube_resources_and_combine(
-        tmpdir, "XsX3ATc3FbA", "1080p", 252)
+    _test_download_youtube_resources(
+        tmpdir, "XsX3ATc3FbA", 60, 120, 60)
 
 
-def test_download_youtube_resources_and_combine_long(tmpdir) -> None:
+def test_download_youtube_resources_long(tmpdir) -> None:
     """
-    Test download long resources from YouTube, merging the video/audio.
+    Test download long resources from YouTube, merging the video/audio, then trimming.
     :return: Nothing
     """
     # [LIVE] 로스트아크 특별 방송 | 19:30 ON AIR
-    _test_download_youtube_resources_and_combine(
-        tmpdir, "Xofxcgkag1M", "1080p", 4190)
+    _test_download_youtube_resources(
+        tmpdir, "Xofxcgkag1M", 900, 2700, 1800)
 
 
-def _test_download_youtube_resources_and_combine(
+def _test_download_youtube_resources(
         tmpdir,
         video_id: str,
-        video_resolution: str,
+        start_time_in_sec: int,
+        end_time_in_sec: int,
         length_in_sec: int) -> None:
     """
     Helper test function for downloading YouTube videos
     :param tmpdir: Temporary test directory
     :param video_id: Test video ID
-    :param video_resolution: Test video resolution
+    :param start_time_in_sec: Start time of trim in seconds
+    :param end_time_in_sec: End time of trim in seconds
     :param length_in_sec: Length for the test video
     """
     platform = YouTubePlatform()
     platform.download_video(
         video_id,
-        video_resolution,
+        start_time_in_sec,
+        end_time_in_sec,
         tmpdir,
-        "combined_video.mp4")
+        "video.mp4")
 
-    expected_combined_path = os.path.join(tmpdir, "combined_video.mp4")
-    assert exists(expected_combined_path)
-    video = VideoFileClip(expected_combined_path)
+    expected_video_path = os.path.join(tmpdir, "video.mp4")
+    assert exists(expected_video_path)
+    video = VideoFileClip(expected_video_path)
     assert int(video.duration) == length_in_sec
     assert int(video.audio.duration) == length_in_sec
 

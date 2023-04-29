@@ -1,3 +1,5 @@
+import json
+
 import boto3
 from google.protobuf.json_format import MessageToJson
 
@@ -21,17 +23,31 @@ def _handle_get_video_metadata(
         print(f"Retrieved the video metadata for video id {video_id}")
         return {
             'statusCode': 200,
+            'headers': {
+                "Content-Type": "application/json"
+            },
             'body': MessageToJson(video_metadata)
         }
     except VimeoUploaderInvalidVideoIdError:
         return {
             'statusCode': 404,
-            'errorMessage': f"Failed to get metadata with video id {video_id} because it is invalid"
+            'headers': {
+                "Content-Type": "application/json"
+            },
+            'body': json.dumps({
+                'error': f"Failed to get metadata with video id {video_id} because it is invalid"
+            })
         }
     except VimeoUploaderInternalServerError:
         return {
             'statusCode': 500,
-            'errorMessage': f"Failed to get metadata with video id {video_id} due to some internal server error"}
+            'headers': {
+                "Content-Type": "application/json"
+            },
+            'body': json.dumps({
+                'error': f"Failed to get metadata with video id {video_id} due to some internal server error"
+            })
+        }
 
 
 def handle_process_video_upload(event, context):
@@ -41,9 +57,7 @@ def handle_process_video_upload(event, context):
     video_id = event['body']['video_id']
     start_time_in_sec = event['body']['start_time_in_sec']
     end_time_in_sec = event['body']['end_time_in_sec']
-    image_content = event['body']['image_content']
-    image_name = event['body']['image_name']
-    resolution = event['body']['resolution']
+    image_identifier = event['body']['image_identifier']
     title = event['body']['title']
     download = event['body']['download']
     s3_client = boto3.client('s3')
@@ -56,9 +70,7 @@ def handle_process_video_upload(event, context):
         video_id,
         start_time_in_sec,
         end_time_in_sec,
-        image_content,
-        image_name,
-        resolution,
+        image_identifier,
         title,
         download)
 
@@ -68,9 +80,7 @@ def _handle_process_video_upload(
         video_id: str,
         start_time_in_sec: int,
         end_time_in_sec: int,
-        image_content: str,
-        image_name: str,
-        resolution: str,
+        image_identifier: str,
         title: str,
         download: bool):
     try:
@@ -78,16 +88,23 @@ def _handle_process_video_upload(
             video_id,
             start_time_in_sec,
             end_time_in_sec,
-            image_content,
-            image_name,
-            resolution,
+            image_identifier,
             title,
             download)
         return {
             'statusCode': 200,
+            'headers': {
+                "Content-Type": "application/json"
+            },
             'body': MessageToJson(video_process_result)
         }
     except VimeoUploaderInternalServerError:
         return {
             'statusCode': 500,
-            'errorMessage': f"Failed to process the video with id {video_id} due to some internal server error"}
+            'headers': {
+                "Content-Type": "application/json"
+            },
+            'body': json.dumps({
+                'error': f"Failed to process the video with id {video_id} due to some internal server error"
+            })
+        }
