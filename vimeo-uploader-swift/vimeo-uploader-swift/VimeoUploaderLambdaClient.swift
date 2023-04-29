@@ -17,7 +17,6 @@ struct VideoMetadata: Codable {
     var author: String?
     var lengthInSec: Int?
     var publishDate: String?
-    var resolutions: [String]?
 }
 
 /**
@@ -74,7 +73,7 @@ class VimeoUploaderLambdaClient {
     /**
      Process the video on Lambda using specified parameteres
      */
-    func processVideo(downloadPlatform: String, uploadPlatform: String, videoId: String, startTimeInSec: Int, endTimeInSec: Int, imageContent: String?, imageName: String?, resolution: String, title: String, download: Bool) async -> VideoProcessResult? {
+    func processVideo(downloadPlatform: String, uploadPlatform: String, videoId: String, startTimeInSec: Int, endTimeInSec: Int, imageIdentifier: String?, title: String, download: Bool) async -> VideoProcessResult? {
         let functionName = "process-video"
         let requestBody = ["body" : [
             "download_platform": downloadPlatform,
@@ -82,9 +81,7 @@ class VimeoUploaderLambdaClient {
             "video_id": videoId,
             "start_time_in_sec": startTimeInSec,
             "end_time_in_sec": endTimeInSec,
-            "image_content": imageContent!,
-            "image_name": imageName!,
-            "resolution": resolution,
+            "image_identifier": imageIdentifier!,
             "title": title,
             "download": download
         ]]
