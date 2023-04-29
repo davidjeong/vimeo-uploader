@@ -11,7 +11,7 @@ makes sense over deploying the backend service on `EC2` due to the nature of the
 
 We have two lambda functions
 - `get-video-metadata` fetches the metadata about the YouTube video and returns it to the user. This is done
-via [pytube](https://pytube.io/en/latest/).
+via [yt-dlp](https://github.com/yt-dlp/yt-dlp).
 - `process-video` processes the video according to user input, and uploads the video to target platform
 (and also S3 bucket if required).
 

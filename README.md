@@ -6,6 +6,5 @@ This is mono-repo consisting of the following sub-projects.
 - [vimeo-uploader-swift](https://github.com/davidjeong/vimeo-uploader/tree/main/vimeo-uploader-swift) (mac-based client)
 
 The goal of this is to allow users to 
-- scrap videos from `YouTube`,
-- trim the videos (or perform additional post-processing using `FFMpeg`),
+- scrape videos from `YouTube`, perform post-processing via `yt-dlp` post-processor,
 - upload to `Vimeo` (or other platform via custom implementation)
