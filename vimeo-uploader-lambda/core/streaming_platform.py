@@ -1,14 +1,14 @@
 import logging
 import os
 from abc import abstractmethod, ABC
+from datetime import datetime
 from enum import Enum
-from urllib.error import HTTPError
 
-import ffmpeg
-import pytube as pytube
 import vimeo
+import yt_dlp
+from yt_dlp.utils import prepend_extension
 
-from core.exceptions import VimeoUploaderInternalServerError, VimeoUploaderInvalidVideoIdError
+from core.exceptions import VimeoUploaderInternalServerError
 from core.generated import model_pb2
 
 
@@ -32,14 +32,16 @@ class StreamingPlatform(ABC):
     def download_video(
             self,
             video_id: str,
-            resolution: str,
+            start_time_in_sec: int,
+            end_time_in_sec: int,
             download_path: str,
             output_file_name: str) -> bool:
         """
         Download the video from streaming service with input parameters to the output path. Output video must contain
         both video and audio channels
         :param video_id: ID of the video
-        :param resolution: Resolution for the video (e.g. 1080p, 1440p)
+        :param start_time_in_sec: Start time of trim in seconds
+        :param end_time_in_sec: End time of trim in seconds
         :param download_path: Absolute path to the output destination folder
         :param output_file_name: Name of the output video file
         :return: Boolean flag representing whether the video completed downloading
@@ -66,75 +68,39 @@ DATE_FORMAT: str = "%Y-%m-%d"
 class YouTubePlatform(StreamingPlatform):
 
     def get_video_metadata(self, video_id) -> model_pb2.VideoMetadata:
-        def _get_resolution_sort_key(res: str) -> int:
-            return int(res[:-1])
-
         url = self._get_youtube_url(video_id)
-        try:
-            print(f"Calling to get video metadata for url {url}")
-            youtube = pytube.YouTube(url)
+        ydl_opts = {}
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.sanitize_info(ydl.extract_info(url, download=False))
             return model_pb2.VideoMetadata(
-                video_id=youtube.video_id,
-                title=youtube.title,
-                author=youtube.author,
-                length_in_sec=youtube.length,
-                publish_date=youtube.publish_date.strftime(DATE_FORMAT),
-                resolutions=list(sorted(set(
-                    [stream.resolution for stream in youtube.streams if stream.resolution]),
-                    key=_get_resolution_sort_key))
-            )
-        except pytube.exceptions.PytubeError:
-            logging.error("Failed to get metadata with video id %s", video_id)
-            raise VimeoUploaderInvalidVideoIdError(
-                f"Failed to get metadata with video id {video_id}")
-        except HTTPError:
-            logging.error("Failed to get metadata with video id %s", video_id)
-            raise VimeoUploaderInternalServerError(
-                f"Failed to get metadata with video id {video_id}")
+                video_id=info["id"],
+                title=info["title"],
+                author=info["uploader"],
+                length_in_sec=info["duration"],
+                publish_date=datetime.strptime(
+                    info["upload_date"],
+                    '%Y%m%d').strftime(DATE_FORMAT))
 
     def download_video(
             self,
             video_id: str,
-            resolution: str,
+            start_time_in_sec: int,
+            end_time_in_sec: int,
             download_path: str,
             output_file_name: str) -> bool:
         url = self._get_youtube_url(video_id)
-        video_stream_file_name = self._get_video_stream_file_name(resolution)
-        audio_stream_file_name = self._get_audio_stream_file_name()
 
-        # Download the separate video/audio streams
-        try:
-            youtube = pytube.YouTube(url)
-            video_stream = youtube.streams.filter(
-                resolution=resolution).first()
-            video_stream.download(download_path, video_stream_file_name)
-            audio_stream = youtube.streams.filter(only_audio=True).first()
-            audio_stream.download(download_path, audio_stream_file_name)
-        except pytube.exceptions.PytubeError:
-            logging.error(
-                "Failed to download video/audio stream file from Youtube for url %s", url)
-            raise VimeoUploaderInternalServerError(
-                f"Failed to download video/audio stream file from Youtube for url {url}")
-
-        absolute_video_stream_path = os.path.join(
-            download_path, video_stream_file_name)
-        absolute_audio_stream_path = os.path.join(
-            download_path, audio_stream_file_name)
-        absolute_output_path = os.path.join(download_path, output_file_name)
-
-        # Combine the two streams into one using FFMPEG
-        input_video_stream = ffmpeg.input(absolute_video_stream_path)
-        input_audio_stream = ffmpeg.input(absolute_audio_stream_path)
-
-        ffmpeg.output(
-            input_video_stream,
-            input_audio_stream,
-            absolute_output_path,
-            vcodec='copy').run()
-
-        # Delete the two resource paths
-        os.remove(absolute_video_stream_path)
-        os.remove(absolute_audio_stream_path)
+        # Download the video, and trim it using ffmpeg
+        ydl_opts = {
+            'format': "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]",
+            'outtmpl': os.path.join(download_path, output_file_name),
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.add_post_processor(
+                self.FFmpegTrimPP(
+                    start_time_in_sec,
+                    end_time_in_sec))
+            error_code = ydl.download(url)
         return True
 
     def upload_video(self, video_path: str, title: str,
@@ -145,13 +111,32 @@ class YouTubePlatform(StreamingPlatform):
     def _get_youtube_url(video_id: str) -> str:
         return YOUTUBE_URL_PREFIX + video_id
 
-    @staticmethod
-    def _get_video_stream_file_name(resolution: str) -> str:
-        return f"video_stream_{resolution}.mp4"
+    class FFmpegTrimPP(yt_dlp.postprocessor.ffmpeg.FFmpegFixupPostProcessor):
+        """
+        Custom post processor used for trimming video
+        """
 
-    @staticmethod
-    def _get_audio_stream_file_name() -> str:
-        return "audio_stream.mp3"
+        def __init__(self, start_time_in_sec: int, end_time_in_sec: int):
+            super().__init__()
+            self.start_time_in_sec = start_time_in_sec
+            self.end_time_in_sec = end_time_in_sec
+
+        def run(self, information):
+            input_opts = [
+                '-ss', str(self.start_time_in_sec),
+                '-to', str(self.end_time_in_sec)
+            ]
+            output_opts = [
+                '-c:v',
+                'copy',
+                '-c:a',
+                'copy'
+            ]
+            filename = information['filepath']
+            temp_filename = prepend_extension(filename, 'temp')
+            self.real_run_ffmpeg([(filename, input_opts)], [(temp_filename, output_opts)])
+            os.replace(temp_filename, filename)
+            return [], information
 
 
 class VimeoPlatform(StreamingPlatform):
@@ -162,7 +147,8 @@ class VimeoPlatform(StreamingPlatform):
     def download_video(
             self,
             video_id: str,
-            resolution: str,
+            start_time_in_sec: int,
+            end_time_in_sec: int,
             download_path: str,
             output_file_name: str) -> bool:
         raise NotImplementedError("This operation is not yet implemented")
