@@ -95,6 +95,7 @@ class YouTubePlatform(StreamingPlatform):
         ydl_opts = {
             'format': "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]",
             'outtmpl': os.path.join(download_path, output_file_name),
+            'cachedir': '/tmp/yt-dlp'
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.add_post_processor(
