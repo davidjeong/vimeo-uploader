@@ -32,19 +32,21 @@ def test_process_video() -> None:
     video_id = "XsX3ATc3FbA"
     start_time_in_sec = 60
     end_time_in_sec = 120
-    image_identifier = ""
+    image_identifier = "8961de50-6033-4d2f-9ecc-b1279d450906"
     title = "BTS MV"
     download = True
     upload_url = "https://vimeo.com/XsX3ATc3FbA"
     download_url = "https://s3.amazon.com/XsX3ATc3FbA"
-    s3_bucket_name = "vimeo-uploader-video-bucket"
+    s3_video_bucket_name = "vimeo-uploader-videos"
+    s3_thumbnail_bucket_name = "vimeo-uploader-thumbnails"
     download_platform = mock.MagicMock()
     download_platform.download_video.return_value = True
     upload_platform = mock.MagicMock()
     upload_platform.upload_video.return_value = upload_url
     s3_client = mock.MagicMock()
     s3_client.generate_presigned_url.return_value = download_url
-    os.environ['S3_VIDEO_BUCKET_NAME'] = s3_bucket_name
+    os.environ['S3_VIDEO_BUCKET_NAME'] = s3_video_bucket_name
+    os.environ['S3_THUMBNAIL_BUCKET_NAME'] = s3_thumbnail_bucket_name
     driver = Driver(download_platform, upload_platform, s3_client)
     video_process_result = driver.process_video(
         video_id,
@@ -59,17 +61,20 @@ def test_process_video() -> None:
         end_time_in_sec,
         f"/tmp/{video_id}",
         f"{video_id}_{start_time_in_sec}_{end_time_in_sec}.mp4")
+    s3_client.download_file.assert_called_with(
+        s3_thumbnail_bucket_name, image_identifier, os.path.join('/tmp', image_identifier)
+    )
     upload_platform.upload_video.assert_called_with(
         f"/tmp/{video_id}/{video_id}_{str(start_time_in_sec)}_{str(end_time_in_sec)}.mp4",
         title,
-        None)
+        os.path.join('/tmp', image_identifier))
     assert video_process_result.download_url == download_url
     assert video_process_result.upload_url == upload_url
 
 
 def test_upload_file_to_s3() -> None:
     download_url = "https://s3.amazon.com/thumbnail.png"
-    s3_bucket_name = "vimeo-uploader-thumbnail-bucket"
+    s3_bucket_name = "vimeo-uploader-thumbnails"
     object_key = "8961de50-6033-4d2f-9ecc-b1279d450906"
     object_path = "/tmp/thumbnail.png"
     s3_client = mock.MagicMock()
