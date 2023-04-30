@@ -120,7 +120,7 @@ def handle_upload_thumbnail_image(event, context):
 
     driver = Driver()
     return _handle_upload_thumbnail_image(
-        driver, str(uuid.uuid4), '/tmp/thumbnail.jpg')
+        driver, str(uuid.uuid4()), '/tmp/thumbnail.jpg')
 
 
 def _handle_upload_thumbnail_image(
