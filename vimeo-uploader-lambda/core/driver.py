@@ -136,7 +136,7 @@ class Driver:
             bucket_name: str,
             expires_in: int = 6 * 3600) -> str:
         """
-        Upload file to S3.
+        Upload file to S3 (with image identifier).
 
         :param object_key: Key of the object
         :param object_path: Path to the object
