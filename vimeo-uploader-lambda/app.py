@@ -1,7 +1,10 @@
+import base64
 import json
+import uuid
 
-import boto3
 from google.protobuf.json_format import MessageToJson
+from streaming_form_data import StreamingFormDataParser
+from streaming_form_data.targets import FileTarget
 
 from core.driver import Driver, get_streaming_platform
 from core.exceptions import VimeoUploaderInternalServerError, VimeoUploaderInvalidVideoIdError
@@ -60,9 +63,7 @@ def handle_process_video_upload(event, context):
     image_identifier = event['body']['image_identifier']
     title = event['body']['title']
     download = event['body']['download']
-    s3_client = boto3.client('s3')
     driver = Driver(
-        s3_client,
         get_streaming_platform(download_platform),
         get_streaming_platform(upload_platform))
     return _handle_process_video_upload(
@@ -106,5 +107,43 @@ def _handle_process_video_upload(
             },
             'body': json.dumps({
                 'error': f"Failed to process the video with id {video_id} due to some internal server error"
+            })
+        }
+
+
+def handle_upload_thumbnail_image(event, context):
+    parser = StreamingFormDataParser(headers=event['params']['header'])
+    parser.register('file', FileTarget('/tmp/thumbnail.jpg'))
+
+    image_data = base64.b64decode(event['body'])
+    parser.data_received(image_data)
+
+    driver = Driver()
+    return _handle_upload_thumbnail_image(
+        driver, str(uuid.uuid4), '/tmp/thumbnail.jpg')
+
+
+def _handle_upload_thumbnail_image(
+        driver: Driver,
+        object_key: str,
+        object_path: str):
+    try:
+        thumbnail_upload_result = driver.upload_thumbnail_image_to_s3(
+            object_key, object_path)
+        return {
+            'statusCode': 200,
+            'headers': {
+                "Content-Type": "application/json"
+            },
+            'body': MessageToJson(thumbnail_upload_result)
+        }
+    except VimeoUploaderInternalServerError:
+        return {
+            'statusCode': 500,
+            'headers': {
+                "Content-Type": "application/json"
+            },
+            'body': json.dumps({
+                'error': f"Failed to upload the image with key {object_key} at path {object_path} due to some internal server error"
             })
         }

@@ -37,7 +37,7 @@ def test_process_video() -> None:
     download = True
     upload_url = "https://vimeo.com/XsX3ATc3FbA"
     download_url = "https://s3.amazon.com/XsX3ATc3FbA"
-    s3_bucket_name = "vimeo-uploader-bucket"
+    s3_bucket_name = "vimeo-uploader-video-bucket"
     download_platform = mock.MagicMock()
     download_platform.download_video.return_value = True
     upload_platform = mock.MagicMock()
@@ -45,7 +45,7 @@ def test_process_video() -> None:
     s3_client = mock.MagicMock()
     s3_client.generate_presigned_url.return_value = download_url
     os.environ['S3_VIDEO_BUCKET_NAME'] = s3_bucket_name
-    driver = Driver(s3_client, download_platform, upload_platform)
+    driver = Driver(download_platform, upload_platform, s3_client)
     video_process_result = driver.process_video(
         video_id,
         start_time_in_sec,
@@ -65,3 +65,23 @@ def test_process_video() -> None:
         None)
     assert video_process_result.download_url == download_url
     assert video_process_result.upload_url == upload_url
+
+
+def test_upload_file_to_s3() -> None:
+    download_url = "https://s3.amazon.com/thumbnail.png"
+    s3_bucket_name = "vimeo-uploader-thumbnail-bucket"
+    object_key = "8961de50-6033-4d2f-9ecc-b1279d450906"
+    object_path = "/tmp/thumbnail.png"
+    s3_client = mock.MagicMock()
+    s3_client.generate_presigned_url.return_value = download_url
+    os.environ['S3_THUMBNAIL_BUCKET_NAME'] = s3_bucket_name
+    driver = Driver(None, None, s3_client)
+    thumbnail_upload_result = driver.upload_thumbnail_image_to_s3(
+        object_key, object_path)
+    s3_client.upload_file.assert_called_with(
+        object_path,
+        s3_bucket_name,
+        object_key
+    )
+    assert thumbnail_upload_result.object_key == object_key
+    assert thumbnail_upload_result.s3_url == download_url

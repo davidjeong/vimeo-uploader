@@ -14,3 +14,8 @@ message VideoProcessResult {
   string download_url = 1;
   string upload_url = 2;
 }
+
+message ThumbnailUploadResult {
+  string object_key = 1;
+  string s3_url = 2;
+}
