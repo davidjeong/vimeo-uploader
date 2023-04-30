@@ -5,7 +5,6 @@ on:
     paths-ignore:
       - '.gitignore'
       - '**/README.md'
-      - 'vimeo-uploader-python/**'
       - 'vimeo-uploader-swift/**'
   push:
     branches:
@@ -13,7 +12,6 @@ on:
     paths-ignore:
       - '.gitignore'
       - '**/README.md'
-      - 'vimeo-uploader-python/**'
       - 'vimeo-uploader-swift/**'
 
 jobs:
