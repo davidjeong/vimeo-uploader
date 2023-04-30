@@ -86,12 +86,14 @@ def test_upload_video_to_vimeo() -> None:
         video_title,
         thumbnail_image_path)
 
-    upload_data_json = {
+    patch_data_json = {
         'name': video_title,
         'privacy': {
             'comments': 'nobody'
         }
     }
-    client.upload.assert_called_with(video_path, data=upload_data_json)
+
+    client.upload.assert_called_with(video_path)
+    client.patch.assert_called_with(upload_url, data=patch_data_json)
     client.upload_picture.assert_called_with(
         upload_url, thumbnail_image_path, activate=True)
