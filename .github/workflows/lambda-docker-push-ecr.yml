@@ -31,7 +31,7 @@ jobs:
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
-    - name: Download FFMpeg and unzip file
+    - name: Download FFmpeg and unzip file
       run: |
         curl https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz \
           --connect-timeout 5 --max-time 5 --retry 5 --retry-delay 0 --output ffmpeg-release-amd64.tar.xz
