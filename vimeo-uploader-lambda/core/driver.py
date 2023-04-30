@@ -36,7 +36,6 @@ class Driver:
             download_platform: StreamingPlatform = None,
             upload_platform: StreamingPlatform = None,
             s3_client: BaseClient = boto3.client('s3'),
-            s3_resource=boto3.resource('s3'),
             allow_download=True,
             allow_upload=True) -> None:
         """
@@ -45,7 +44,6 @@ class Driver:
         self.download_platform = download_platform
         self.upload_platform = upload_platform
         self.s3_client = s3_client
-        self.s3_resource = s3_resource
         self.allow_download = allow_download
         self.allow_upload = allow_upload
         print("Driver initialization successful")
@@ -184,7 +182,7 @@ class Driver:
         :return:
         """
         image_path = os.path.join(root_path, image_identifier)
-        self.s3_resource.meta.download_file(
+        self.s3_client.download_file(
             os.environ['S3_THUMBNAIL_BUCKET_NAME'],
             image_identifier,
             image_path)
