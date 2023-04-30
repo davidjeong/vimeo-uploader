@@ -4,7 +4,7 @@
 
 This is the sub-module containing backend functionalities required for downloading the video, performing video processing,
 and re-upload to platform of choice. Initially, the video processing logic resided on the client side,
-and required users to go through complicated setup with FFMpeg.
+and required users to go through complicated setup with FFmpeg.
 
 `AWS Lambda` will handle the invocations by the client side, and perform the necessary operations. `AWS Lambda` 
 makes sense over deploying the backend service on `EC2` due to the nature of the usage of this tool (it is used very rarely).
