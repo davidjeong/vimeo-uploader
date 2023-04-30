@@ -33,9 +33,10 @@ class Driver:
 
     def __init__(
             self,
-            s3_client: BaseClient = None,
             download_platform: StreamingPlatform = None,
             upload_platform: StreamingPlatform = None,
+            s3_client: BaseClient = boto3.client('s3'),
+            s3_resource=boto3.resource('s3'),
             allow_download=True,
             allow_upload=True) -> None:
         """
@@ -44,6 +45,7 @@ class Driver:
         self.download_platform = download_platform
         self.upload_platform = upload_platform
         self.s3_client = s3_client
+        self.s3_resource = s3_resource
         self.allow_download = allow_download
         self.allow_upload = allow_upload
         print("Driver initialization successful")
@@ -120,14 +122,21 @@ class Driver:
             download_url=download_url,
             upload_url=upload_url)
 
-    def upload_file_to_s3(self, object_key: str, object_path: str) -> str:
+    def upload_thumbnail_image_to_s3(
+            self,
+            object_key: str,
+            object_path: str) -> model_pb2.ThumbnailUploadResult:
         """
-        Upload file to s3
+        Upload thumbnail image to s3
         """
-        return self._upload_file_to_s3(
+        s3_url = self._upload_file_to_s3(
             object_key,
             object_path,
             os.environ['S3_THUMBNAIL_BUCKET_NAME'])
+        return model_pb2.ThumbnailUploadResult(
+            object_key=object_key,
+            s3_url=s3_url
+        )
 
     def _upload_file_to_s3(
             self,
@@ -159,11 +168,12 @@ class Driver:
                 "Failed to upload object with key % and file %s to s3",
                 object_key,
                 object_path)
-            url = None
+            raise VimeoUploaderInternalServerError(
+                "Failed to upload the file to s3")
         return url
 
-    @staticmethod
     def _download_image_to_file(
+            self,
             image_identifier: str,
             root_path: str) -> str:
         """
@@ -173,9 +183,8 @@ class Driver:
         :param root_path: Root path of file
         :return:
         """
-        s3 = boto3.resource('s3')
         image_path = os.path.join(root_path, image_identifier)
-        s3.meta.download_file(
+        self.s3_resource.meta.download_file(
             os.environ['S3_THUMBNAIL_BUCKET_NAME'],
             image_identifier,
             image_path)

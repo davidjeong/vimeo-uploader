@@ -63,5 +63,7 @@ jobs:
       run: |
         aws lambda update-function-code --function-name get-video-metadata --region us-east-1 \
           --image-uri $REGISTRY/$REPOSITORY:$IMAGE_TAG
+        aws lambda update-function-code --function-name upload-thumbnail-image --region us-east-1 \
+          --image-uri $REGISTRY/$REPOSITORY:$IMAGE_TAG
         aws lambda update-function-code --function-name process-video --region us-east-1 \
           --image-uri $REGISTRY/$REPOSITORY:$IMAGE_TAG
