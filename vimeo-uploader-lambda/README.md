@@ -2,7 +2,7 @@
 
 [![Run Python Sanity for Lambda](https://github.com/davidjeong/vimeo-uploader/actions/workflows/lambda-python-sanity.yml/badge.svg?branch=main)](https://github.com/davidjeong/vimeo-uploader/actions/workflows/lambda-python-sanity.yml) [![Push Lambda Docker Image to ECR](https://github.com/davidjeong/vimeo-uploader/actions/workflows/lambda-docker-push-ecr.yml/badge.svg?branch=main)](https://github.com/davidjeong/vimeo-uploader/actions/workflows/lambda-docker-push-ecr.yml)
 
-This is the sub-module containing backend functionalities required for downloading the video, performing video proessing,
+This is the sub-module containing backend functionalities required for downloading the video, performing video processing,
 and re-upload to platform of choice. Initially, the video processing logic resided on the client side,
 and required users to go through complicated setup with FFMpeg.
 
@@ -23,7 +23,7 @@ We package up all the necessary python scripts into a single docker image.
 ## Configuration of Lambda Function
 It is recommended that the following settings be used on `AWS Lambda`
 - `get-video-metadata`
-  - Memory of 1024MB
+  - Memory of 2048MB (more ram = faster operation)
   - Ephemeral storage of 512MB
   - Time out of 1 minute
 - `process-video`
@@ -32,7 +32,8 @@ It is recommended that the following settings be used on `AWS Lambda`
   - Timeout of 10 minutes
 
 For `process-video` lambda function, the following ENV variables need to be set on function configuration section.
-- `S3_BUCKET_NAME`: Name of the S3 Bucket
+- `S3_THUMBNAIL_BUCKET_NAME`: Name of the thumbnail S3 Bucket
+- `S3_VIDEO_BUCKET_NAME`: Name of the video S3 Bucket
 - `VIMEO_CLIENT_KEY`: API client key for Vimeo
 - `VIMEO_CLIENT_SECRET`: API client secret for Vimeo
 - `VIMEO_CLIENT_TOKEN`: API client token for Vimeo

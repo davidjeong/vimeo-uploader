@@ -91,6 +91,7 @@ class YouTubePlatform(StreamingPlatform):
         url = self._get_youtube_url(video_id)
 
         # Download the video, and trim it using ffmpeg
+        # Fetch the best video / audio in mp4 / m4a
         ydl_opts = {
             'format': "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]",
             'outtmpl': os.path.join(download_path, output_file_name),
@@ -101,6 +102,7 @@ class YouTubePlatform(StreamingPlatform):
                     start_time_in_sec,
                     end_time_in_sec))
             error_code = ydl.download(url)
+            logging.info("Error code is %d", error_code)
         return True
 
     def upload_video(self, video_path: str, title: str,
@@ -134,7 +136,9 @@ class YouTubePlatform(StreamingPlatform):
             ]
             filename = information['filepath']
             temp_filename = prepend_extension(filename, 'temp')
-            self.real_run_ffmpeg([(filename, input_opts)], [(temp_filename, output_opts)])
+            # Ordering of inputs matters!
+            self.real_run_ffmpeg([(filename, input_opts)], [
+                                 (temp_filename, output_opts)])
             os.replace(temp_filename, filename)
             return [], information
 
@@ -172,12 +176,16 @@ class VimeoPlatform(StreamingPlatform):
             title: str,
             thumbnail_image_path: str = None) -> str:
         try:
-            url = vimeo_client.upload(video_path, data={
-                'name': title,
-                'privacy': {
-                    'comments': 'nobody'
-                }
-            })
+            # Upload the video, and call patch to set title
+            url = vimeo_client.upload(video_path)
+            vimeo_client.patch(
+                url,
+                data={
+                    'name': title,
+                    'privacy': {
+                        'comments': 'nobody'
+                    }
+                })
         except vimeo.exceptions.VideoUploadFailure:
             logging.error(
                 "Failed to upload video from path %s",

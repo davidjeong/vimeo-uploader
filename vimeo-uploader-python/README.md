@@ -1,3 +1,5 @@
+> :warning: **This is no longer being maintained**
+
 # Vimeo Uploader Python Client
 This is a python-based GUI application that communicates with AWS Lambda (see [Vimeo Uploader Lambda](https://github.com/davidjeong/vimeo-uploader/tree/main/vimeo-uploader-lambda)) 
 Users will be able to specify YouTube video URL, trim timestamps, and other information. It uses python GUI framework [tkinter](https://docs.python.org/3/library/tkinter.html/).
