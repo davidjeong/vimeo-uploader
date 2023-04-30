@@ -3,17 +3,19 @@
 [![Run Python Sanity for Lambda](https://github.com/davidjeong/vimeo-uploader/actions/workflows/lambda-python-sanity.yml/badge.svg?branch=main)](https://github.com/davidjeong/vimeo-uploader/actions/workflows/lambda-python-sanity.yml) [![Push Lambda Docker Image to ECR](https://github.com/davidjeong/vimeo-uploader/actions/workflows/lambda-docker-push-ecr.yml/badge.svg?branch=main)](https://github.com/davidjeong/vimeo-uploader/actions/workflows/lambda-docker-push-ecr.yml)
 
 This is the sub-module containing backend functionalities required for downloading the video, performing video processing,
-and re-upload to platform of choice. Initially, the video processing logic resided on the client side,
-and required users to go through complicated setup with FFmpeg.
+and re-upload to platform of choice. GitHub actions builds the docker image containing all necessary dependencies and binaries
+required to run all lambda functions required.
 
 `AWS Lambda` will handle the invocations by the client side, and perform the necessary operations. `AWS Lambda` 
 makes sense over deploying the backend service on `EC2` due to the nature of the usage of this tool (it is used very rarely).
 
-We have two lambda functions
+We have three lambda functions,
 - `get-video-metadata` fetches the metadata about the YouTube video and returns it to the user. This is done
 via [yt-dlp](https://github.com/yt-dlp/yt-dlp).
-- `process-video` processes the video according to user input, and uploads the video to target platform
-(and also S3 bucket if required).
+- `upload-thumbnail-image` processes the request for uploading thumbnail image to S3.
+- `process-video` processes the video according to user input, downloads the thumbnail from S3, and uploads the
+video to target platform (and also S3 bucket if required).
+
 
 ## How this works
 We package up all the necessary python scripts into a single docker image.
@@ -21,15 +23,23 @@ We package up all the necessary python scripts into a single docker image.
 - On the AWS console, we create a lambda function using image, but override the `CMD`.
 
 ## Configuration of Lambda Function
-It is recommended that the following settings be used on `AWS Lambda`
+It is recommended that the following settings be used on AWS Lambda.
 - `get-video-metadata`
-  - Memory of 2048MB (more ram = faster operation)
+  - Memory of 1024MB (more ram = faster operation)
+  - Ephemeral storage of 512MB
+  - Time out of 1 minute
+- `upload-thumbnail-image`
+  - Memory of 1024MB
   - Ephemeral storage of 512MB
   - Time out of 1 minute
 - `process-video`
   - Memory of 2048MB
   - Ephemeral storage of 6144MB (can be tuned according to video characteristics)
   - Timeout of 10 minutes
+
+### Setting ENV variables
+For `upload-thumbnail-image` lambda function, the following ENV variables need to be set on function configuration section.
+- `S3_THUMBNAIL_BUCKET_NAME`: Name of the thumbnail S3 Bucket
 
 For `process-video` lambda function, the following ENV variables need to be set on function configuration section.
 - `S3_THUMBNAIL_BUCKET_NAME`: Name of the thumbnail S3 Bucket
@@ -40,3 +50,6 @@ For `process-video` lambda function, the following ENV variables need to be set 
 
 Furthermore, the appropriate IAM permissions are required to be set for authentication
 for S3 upload.
+
+> :warning: `upload-thumbnail-image` is uses multipart/form-data and proxies via api gateway, so it requires additional configuration.
+See steps from [link here](https://pinchoflogic.com/multiplepartfrom-data-aws-api-gateway-lambda).
