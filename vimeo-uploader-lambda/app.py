@@ -1,11 +1,7 @@
-import base64
 import json
-import os
 import uuid
 
 from google.protobuf.json_format import MessageToJson
-from streaming_form_data import StreamingFormDataParser
-from streaming_form_data.targets import FileTarget
 
 from core.driver import Driver, get_streaming_platform
 from core.exceptions import VimeoUploaderInternalServerError, VimeoUploaderInvalidVideoIdError
