@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct vimeo_uploader_swiftApp: App {
+struct CrosswalkUploaderApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView().frame(minWidth: 600, maxWidth: 1200, minHeight: 600, maxHeight: 1200)
