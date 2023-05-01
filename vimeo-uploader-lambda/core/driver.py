@@ -1,3 +1,4 @@
+import base64
 import logging
 import os
 from datetime import date
@@ -122,14 +123,18 @@ class Driver:
 
     def upload_thumbnail_image_to_s3(
             self,
+            root_path: str,
             object_key: str,
-            object_path: str) -> model_pb2.ThumbnailUploadResult:
+            object_content: str) -> model_pb2.ThumbnailUploadResult:
         """
         Upload thumbnail image to s3
         """
+        image_path = os.path.join(root_path, object_key)
+        with open(image_path, 'wb') as file:
+            file.write(base64.b64decode(object_content.encode('utf-8')))
         s3_url = self._upload_file_to_s3(
             object_key,
-            object_path,
+            image_path,
             os.environ['S3_THUMBNAIL_BUCKET_NAME'])
         return model_pb2.ThumbnailUploadResult(
             object_key=object_key,
@@ -141,7 +146,7 @@ class Driver:
             object_key: str,
             object_path: str,
             bucket_name: str,
-            expires_in: int = 6 * 3600) -> str:
+            expires_in: int = 1 * 3600) -> str:
         """
         Upload file to S3 (with image identifier).
 

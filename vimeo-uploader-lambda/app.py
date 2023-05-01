@@ -1,5 +1,6 @@
 import base64
 import json
+import os
 import uuid
 
 from google.protobuf.json_format import MessageToJson
@@ -112,24 +113,20 @@ def _handle_process_video_upload(
 
 
 def handle_upload_thumbnail_image(event, context):
-    parser = StreamingFormDataParser(headers=event['params']['header'])
-    parser.register('file', FileTarget('/tmp/thumbnail.jpg'))
-
-    image_data = base64.b64decode(event['body'])
-    parser.data_received(image_data)
-
+    data = event['body']
     driver = Driver()
     return _handle_upload_thumbnail_image(
-        driver, str(uuid.uuid4()), '/tmp/thumbnail.jpg')
+        driver, '/tmp', str(uuid.uuid4()), data)
 
 
 def _handle_upload_thumbnail_image(
         driver: Driver,
+        root_path: str,
         object_key: str,
-        object_path: str):
+        object_content: str):
     try:
         thumbnail_upload_result = driver.upload_thumbnail_image_to_s3(
-            object_key, object_path)
+            root_path, object_key, object_content)
         return {
             'statusCode': 200,
             'headers': {
