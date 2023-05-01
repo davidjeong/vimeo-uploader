@@ -69,7 +69,9 @@ class YouTubePlatform(StreamingPlatform):
 
     def get_video_metadata(self, video_id) -> model_pb2.VideoMetadata:
         url = self._get_youtube_url(video_id)
-        ydl_opts = {}
+        ydl_opts = {
+            'cachedir': '/tmp/yt-dlp'
+        }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.sanitize_info(ydl.extract_info(url, download=False))
             return model_pb2.VideoMetadata(
