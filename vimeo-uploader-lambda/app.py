@@ -137,6 +137,6 @@ def _handle_upload_thumbnail_image(
                 "Content-Type": "application/json"
             },
             'body': json.dumps({
-                'error': f"Failed to upload the image with key {object_key} at path {object_path} due to some internal server error"
+                'error': f"Failed to upload the image with key {object_key} at root path {root_path} due to some internal server error"
             })
         }
