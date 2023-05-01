@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+message VideoMetadata {
+  string video_id = 1;
+  string title = 2;
+  string author = 3;
+  int32 length_in_sec = 4;
+  string publish_date = 5;
+}
+
+message VideoProcessResult {
+  string download_url = 1;
+  string upload_url = 2;
+}
+
+message ThumbnailUploadResult {
+  string object_key = 1;
+  string s3_url = 2;
+}

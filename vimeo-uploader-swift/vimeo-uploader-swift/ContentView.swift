@@ -11,7 +11,7 @@ struct ContentView: View {
     
     private var gridItemLayout = [GridItem(.flexible()), GridItem(.flexible())]
     
-    private let client = VimeoUploaderLambdaClient()
+    private let client = CustomClient()
     private let emptyResolutions = ["N/A"]
     
     @State private var isConfirming: Bool = false
@@ -37,7 +37,7 @@ struct ContentView: View {
                         resetInputs()
                         disableVideoInputs = true
                         Task {
-                            let fetchedMetadata = await client.getVideoMetadata(platform: "youtube", videoId: videoId)
+                            let fetchedMetadata = await client.getVideoMetadata(videoId: videoId)
                             if fetchedMetadata != nil {
                                 videoMetadata = fetchedMetadata
                                 isConfirming = true
@@ -110,12 +110,6 @@ struct ContentView: View {
             }
             Divider()
             GridRow {
-                Text("Save")
-                Toggle("Download On Completion", isOn: $download).toggleStyle(.checkbox)
-                    .disabled(disableVideoInputs || inProgress)
-            }.padding()
-            Divider()
-            GridRow {
                 Text("Process")
                 Button("Click to start the process", action: {
                     print("Start process")
@@ -133,7 +127,7 @@ struct ContentView: View {
                             imageIdentifier: "",
                             title: title,
                             download: download)
-                        if let urlString = videoProcessResult?.uploadUrl {
+                        if let urlString = videoProcessResult?.uploadURL {
                             if let uploadUrl = URL(string: urlString) {
                                 NSWorkspace.shared.open(uploadUrl)
                             }

@@ -7,15 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E90BF2C32956CE4600304703 /* vimeo_uploader_swiftApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90BF2C22956CE4600304703 /* vimeo_uploader_swiftApp.swift */; };
+		E90BF2C32956CE4600304703 /* CrosswalkUploaderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90BF2C22956CE4600304703 /* CrosswalkUploaderApp.swift */; };
 		E90BF2C52956CE4600304703 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90BF2C42956CE4600304703 /* ContentView.swift */; };
 		E90BF2C72956CE4600304703 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E90BF2C62956CE4600304703 /* Assets.xcassets */; };
 		E90BF2CA2956CE4600304703 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E90BF2C92956CE4600304703 /* Preview Assets.xcassets */; };
 		E90BF2D52956CE4600304703 /* vimeo_uploader_swiftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90BF2D42956CE4600304703 /* vimeo_uploader_swiftTests.swift */; };
 		E90BF2DF2956CE4600304703 /* vimeo_uploader_swiftUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90BF2DE2956CE4600304703 /* vimeo_uploader_swiftUITests.swift */; };
 		E90BF2E12956CE4600304703 /* vimeo_uploader_swiftUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90BF2E02956CE4600304703 /* vimeo_uploader_swiftUITestsLaunchTests.swift */; };
-		E93CC98A2969DAF800FEC458 /* VimeoUploaderLambdaClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E93CC9892969DAF800FEC458 /* VimeoUploaderLambdaClient.swift */; };
-		E95D9655296939BD007C2F07 /* AWSLambda in Frameworks */ = {isa = PBXBuildFile; productRef = E95D9654296939BD007C2F07 /* AWSLambda */; };
+		E93CC98A2969DAF800FEC458 /* CustomClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E93CC9892969DAF800FEC458 /* CustomClient.swift */; };
+		E944071429FF2DEA004DEF41 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = E944071329FF2DEA004DEF41 /* SwiftProtobuf */; };
+		E944071629FF2DEA004DEF41 /* SwiftProtobufPluginLibrary in Frameworks */ = {isa = PBXBuildFile; productRef = E944071529FF2DEA004DEF41 /* SwiftProtobufPluginLibrary */; };
+		E944071829FF2DEA004DEF41 /* protoc-gen-swift in Frameworks */ = {isa = PBXBuildFile; productRef = E944071729FF2DEA004DEF41 /* protoc-gen-swift */; };
+		E944071A29FF2F24004DEF41 /* model.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E944071929FF2F24004DEF41 /* model.pb.swift */; };
+		E944071D29FF3E89004DEF41 /* SotoAPIGateway in Frameworks */ = {isa = PBXBuildFile; productRef = E944071C29FF3E89004DEF41 /* SotoAPIGateway */; };
+		E944071F29FF3E89004DEF41 /* SotoLambda in Frameworks */ = {isa = PBXBuildFile; productRef = E944071E29FF3E89004DEF41 /* SotoLambda */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,7 +42,7 @@
 
 /* Begin PBXFileReference section */
 		E90BF2BF2956CE4600304703 /* vimeo-uploader-swift.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "vimeo-uploader-swift.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		E90BF2C22956CE4600304703 /* vimeo_uploader_swiftApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = vimeo_uploader_swiftApp.swift; sourceTree = "<group>"; };
+		E90BF2C22956CE4600304703 /* CrosswalkUploaderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrosswalkUploaderApp.swift; sourceTree = "<group>"; };
 		E90BF2C42956CE4600304703 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		E90BF2C62956CE4600304703 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E90BF2C92956CE4600304703 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -47,7 +52,8 @@
 		E90BF2DA2956CE4600304703 /* vimeo-uploader-swiftUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "vimeo-uploader-swiftUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E90BF2DE2956CE4600304703 /* vimeo_uploader_swiftUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = vimeo_uploader_swiftUITests.swift; sourceTree = "<group>"; };
 		E90BF2E02956CE4600304703 /* vimeo_uploader_swiftUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = vimeo_uploader_swiftUITestsLaunchTests.swift; sourceTree = "<group>"; };
-		E93CC9892969DAF800FEC458 /* VimeoUploaderLambdaClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VimeoUploaderLambdaClient.swift; sourceTree = "<group>"; };
+		E93CC9892969DAF800FEC458 /* CustomClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomClient.swift; sourceTree = "<group>"; };
+		E944071929FF2F24004DEF41 /* model.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = model.pb.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,7 +61,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E95D9655296939BD007C2F07 /* AWSLambda in Frameworks */,
+				E944071829FF2DEA004DEF41 /* protoc-gen-swift in Frameworks */,
+				E944071629FF2DEA004DEF41 /* SwiftProtobufPluginLibrary in Frameworks */,
+				E944071429FF2DEA004DEF41 /* SwiftProtobuf in Frameworks */,
+				E944071F29FF3E89004DEF41 /* SotoLambda in Frameworks */,
+				E944071D29FF3E89004DEF41 /* SotoAPIGateway in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -100,12 +110,13 @@
 		E90BF2C12956CE4600304703 /* vimeo-uploader-swift */ = {
 			isa = PBXGroup;
 			children = (
-				E90BF2C22956CE4600304703 /* vimeo_uploader_swiftApp.swift */,
+				E93CC9892969DAF800FEC458 /* CustomClient.swift */,
+				E90BF2C22956CE4600304703 /* CrosswalkUploaderApp.swift */,
 				E90BF2C42956CE4600304703 /* ContentView.swift */,
-				E90BF2C62956CE4600304703 /* Assets.xcassets */,
+				E944071929FF2F24004DEF41 /* model.pb.swift */,
 				E90BF2CB2956CE4600304703 /* vimeo_uploader_swift.entitlements */,
+				E90BF2C62956CE4600304703 /* Assets.xcassets */,
 				E90BF2C82956CE4600304703 /* Preview Content */,
-				E93CC9892969DAF800FEC458 /* VimeoUploaderLambdaClient.swift */,
 			);
 			path = "vimeo-uploader-swift";
 			sourceTree = "<group>";
@@ -159,7 +170,11 @@
 			);
 			name = "vimeo-uploader-swift";
 			packageProductDependencies = (
-				E95D9654296939BD007C2F07 /* AWSLambda */,
+				E944071329FF2DEA004DEF41 /* SwiftProtobuf */,
+				E944071529FF2DEA004DEF41 /* SwiftProtobufPluginLibrary */,
+				E944071729FF2DEA004DEF41 /* protoc-gen-swift */,
+				E944071C29FF3E89004DEF41 /* SotoAPIGateway */,
+				E944071E29FF3E89004DEF41 /* SotoLambda */,
 			);
 			productName = "vimeo-uploader-swift";
 			productReference = E90BF2BF2956CE4600304703 /* vimeo-uploader-swift.app */;
@@ -234,7 +249,8 @@
 			);
 			mainGroup = E90BF2B62956CE4600304703;
 			packageReferences = (
-				E95D9653296939BD007C2F07 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */,
+				E944071229FF2DEA004DEF41 /* XCRemoteSwiftPackageReference "swift-protobuf" */,
+				E944071B29FF3E89004DEF41 /* XCRemoteSwiftPackageReference "soto" */,
 			);
 			productRefGroup = E90BF2C02956CE4600304703 /* Products */;
 			projectDirPath = "";
@@ -278,9 +294,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E93CC98A2969DAF800FEC458 /* VimeoUploaderLambdaClient.swift in Sources */,
+				E93CC98A2969DAF800FEC458 /* CustomClient.swift in Sources */,
 				E90BF2C52956CE4600304703 /* ContentView.swift in Sources */,
-				E90BF2C32956CE4600304703 /* vimeo_uploader_swiftApp.swift in Sources */,
+				E944071A29FF2F24004DEF41 /* model.pb.swift in Sources */,
+				E90BF2C32956CE4600304703 /* CrosswalkUploaderApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -447,7 +464,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"vimeo-uploader-swift/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Vimeo Uploader";
+				INFOPLIST_KEY_CFBundleDisplayName = "Crosswalk Uploader";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -476,7 +493,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"vimeo-uploader-swift/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Vimeo Uploader";
+				INFOPLIST_KEY_CFBundleDisplayName = "Crosswalk Uploader";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -606,21 +623,49 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		E95D9653296939BD007C2F07 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */ = {
+		E944071229FF2DEA004DEF41 /* XCRemoteSwiftPackageReference "swift-protobuf" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/awslabs/aws-sdk-swift";
+			repositoryURL = "https://github.com/apple/swift-protobuf.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.8.0;
+				minimumVersion = 1.0.0;
+			};
+		};
+		E944071B29FF3E89004DEF41 /* XCRemoteSwiftPackageReference "soto" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/soto-project/soto.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		E95D9654296939BD007C2F07 /* AWSLambda */ = {
+		E944071329FF2DEA004DEF41 /* SwiftProtobuf */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E95D9653296939BD007C2F07 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
-			productName = AWSLambda;
+			package = E944071229FF2DEA004DEF41 /* XCRemoteSwiftPackageReference "swift-protobuf" */;
+			productName = SwiftProtobuf;
+		};
+		E944071529FF2DEA004DEF41 /* SwiftProtobufPluginLibrary */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E944071229FF2DEA004DEF41 /* XCRemoteSwiftPackageReference "swift-protobuf" */;
+			productName = SwiftProtobufPluginLibrary;
+		};
+		E944071729FF2DEA004DEF41 /* protoc-gen-swift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E944071229FF2DEA004DEF41 /* XCRemoteSwiftPackageReference "swift-protobuf" */;
+			productName = "protoc-gen-swift";
+		};
+		E944071C29FF3E89004DEF41 /* SotoAPIGateway */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E944071B29FF3E89004DEF41 /* XCRemoteSwiftPackageReference "soto" */;
+			productName = SotoAPIGateway;
+		};
+		E944071E29FF3E89004DEF41 /* SotoLambda */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E944071B29FF3E89004DEF41 /* XCRemoteSwiftPackageReference "soto" */;
+			productName = SotoLambda;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
