@@ -51,5 +51,5 @@ For `process-video` lambda function, the following ENV variables need to be set 
 Furthermore, the appropriate IAM permissions are required to be set for authentication
 for S3 upload.
 
-> :warning: `upload-thumbnail-image` is uses multipart/form-data and proxies via api gateway, so it requires additional configuration.
+> :warning: `upload-thumbnail-image` uses multipart/form-data and proxies via api gateway, so it requires additional configuration.
 See steps from [link here](https://pinchoflogic.com/multiplepartfrom-data-aws-api-gateway-lambda).

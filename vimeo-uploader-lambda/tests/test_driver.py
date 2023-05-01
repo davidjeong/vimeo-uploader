@@ -1,3 +1,4 @@
+import base64
 import os
 from unittest import mock
 
@@ -62,8 +63,8 @@ def test_process_video() -> None:
         f"/tmp/{video_id}",
         f"{video_id}_{start_time_in_sec}_{end_time_in_sec}.mp4")
     s3_client.download_file.assert_called_with(
-        s3_thumbnail_bucket_name, image_identifier, os.path.join('/tmp', image_identifier)
-    )
+        s3_thumbnail_bucket_name, image_identifier, os.path.join(
+            '/tmp', image_identifier))
     upload_platform.upload_video.assert_called_with(
         f"/tmp/{video_id}/{video_id}_{str(start_time_in_sec)}_{str(end_time_in_sec)}.mp4",
         title,
@@ -72,19 +73,21 @@ def test_process_video() -> None:
     assert video_process_result.upload_url == upload_url
 
 
-def test_upload_file_to_s3() -> None:
+def test_upload_file_to_s3(tmpdir) -> None:
     download_url = "https://s3.amazon.com/thumbnail.png"
     s3_bucket_name = "vimeo-uploader-thumbnails"
     object_key = "8961de50-6033-4d2f-9ecc-b1279d450906"
-    object_path = "/tmp/thumbnail.png"
+    object_path = os.path.join('tests', 'resources', 'thumbnail.jpg')
+    with open(object_path, 'rb') as file:
+        object_content = base64.b64encode(file.read()).decode('utf-8')
     s3_client = mock.MagicMock()
     s3_client.generate_presigned_url.return_value = download_url
     os.environ['S3_THUMBNAIL_BUCKET_NAME'] = s3_bucket_name
     driver = Driver(None, None, s3_client)
     thumbnail_upload_result = driver.upload_thumbnail_image_to_s3(
-        object_key, object_path)
+        tmpdir, object_key, object_content)
     s3_client.upload_file.assert_called_with(
-        object_path,
+        os.path.join(tmpdir, object_key),
         s3_bucket_name,
         object_key
     )
