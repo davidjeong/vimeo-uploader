@@ -15,14 +15,16 @@ struct ContentView: View {
     private let emptyResolutions = ["N/A"]
     
     @State private var isConfirming: Bool = false
+    @State private var isOpenUrl: Bool = false
     @State private var videoMetadata: VideoMetadata?
 
     @State private var videoId: String = ""
     @State private var startTime: String = ""
     @State private var endTime: String = ""
-    @State private var imageIdentifier: String = ""
+    @State private var imageUrl: URL? = nil
     @State private var title: String = ""
     @State private var download: Bool = false
+    @State private var uploadUrl: String = ""
     
     @State private var disableVideoInputs = true
     @State private var inProgress = false
@@ -50,7 +52,7 @@ struct ContentView: View {
                     .disabled(inProgress)
                     .confirmationDialog(
                         """
-                        Are you sure you want to use this video?
+                        Use this video?
                         Title: \(videoMetadata?.title ?? "N/A")
                         Author: \(videoMetadata?.author ?? "N/A")
                         Upload Date: \(videoMetadata?.publishDate ?? "N/A")
@@ -94,7 +96,7 @@ struct ContentView: View {
                         if (dialog.runModal() == NSApplication.ModalResponse.OK) {
                             let result = dialog.url
                             if result != nil {
-                                imageIdentifier = ""
+                                imageUrl = result
                             } else {
                                 return
                             }
@@ -116,6 +118,15 @@ struct ContentView: View {
                     inProgress = true
                     Task {
                         print("Firing off task")
+                        var imageIdentifier = ""
+                        if let url = imageUrl {
+                            let data = try Data.init(contentsOf: url)
+                            let imageData = data.base64EncodedString(options: .lineLength64Characters)
+                            let thumbnailUploadResult = await client.uploadThumbnailImage(imageData: imageData)
+                            if let result = thumbnailUploadResult {
+                                imageIdentifier = result.objectKey
+                            }
+                        }
                         let startTimeInSec = getSeconds(time: startTime)
                         let endTimeInSec = getSeconds(time: endTime)
                         let videoProcessResult = await client.processVideo(
@@ -124,18 +135,33 @@ struct ContentView: View {
                             videoId: videoId,
                             startTimeInSec: startTimeInSec,
                             endTimeInSec: endTimeInSec,
-                            imageIdentifier: "",
+                            imageIdentifier: imageIdentifier,
                             title: title,
                             download: download)
                         if let urlString = videoProcessResult?.uploadURL {
-                            if let uploadUrl = URL(string: urlString) {
-                                NSWorkspace.shared.open(uploadUrl)
-                            }
+                            uploadUrl = urlString
+                            isOpenUrl = true
                         }
                         inProgress = false
                     }
                 })
                 .disabled(disableVideoInputs || inProgress)
+                .confirmationDialog(
+                    """
+                    Completed the upload process video.
+                    Open the uploaded video link?
+                    """,
+                    isPresented: $isOpenUrl
+                ) {
+                    Button("Open") {
+                        if let url = URL(string: uploadUrl) {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                    Button("Cancel", role: .cancel) {
+
+                    }
+                }
             }.padding()
         }
         .padding()
@@ -152,7 +178,7 @@ struct ContentView: View {
     private func resetInputs() {
         startTime = ""
         endTime = ""
-        imageIdentifier = ""
+        imageUrl = nil
         title = ""
         download = false
     }

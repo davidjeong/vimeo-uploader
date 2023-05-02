@@ -49,6 +49,23 @@ class CustomClient {
         return nil
     }
     
+    func uploadThumbnailImage(imageData: String?) async -> ThumbnailUploadResult? {
+        let lambda = Lambda(client: self.client, region: .useast1)
+        let body = [
+            "body": imageData
+        ]
+        do {
+            let payload = try JSONSerialization.data(withJSONObject: body)
+            let response = try await createInvokeLambdaTask(lambda: lambda, functionName: "upload-thumbnail-image", payload: payload)
+            if let r = response, r.statusCode == 200 {
+                return try ThumbnailUploadResult(jsonString: r.body!)
+            }
+        } catch {
+            dump(error)
+        }
+        return nil
+    }
+    
     /**
      Process the video on Lambda using specified parameteres
      */

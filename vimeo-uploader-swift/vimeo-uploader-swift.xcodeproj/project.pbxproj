@@ -19,7 +19,6 @@
 		E944071629FF2DEA004DEF41 /* SwiftProtobufPluginLibrary in Frameworks */ = {isa = PBXBuildFile; productRef = E944071529FF2DEA004DEF41 /* SwiftProtobufPluginLibrary */; };
 		E944071829FF2DEA004DEF41 /* protoc-gen-swift in Frameworks */ = {isa = PBXBuildFile; productRef = E944071729FF2DEA004DEF41 /* protoc-gen-swift */; };
 		E944071A29FF2F24004DEF41 /* model.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E944071929FF2F24004DEF41 /* model.pb.swift */; };
-		E944071D29FF3E89004DEF41 /* SotoAPIGateway in Frameworks */ = {isa = PBXBuildFile; productRef = E944071C29FF3E89004DEF41 /* SotoAPIGateway */; };
 		E944071F29FF3E89004DEF41 /* SotoLambda in Frameworks */ = {isa = PBXBuildFile; productRef = E944071E29FF3E89004DEF41 /* SotoLambda */; };
 /* End PBXBuildFile section */
 
@@ -65,7 +64,6 @@
 				E944071629FF2DEA004DEF41 /* SwiftProtobufPluginLibrary in Frameworks */,
 				E944071429FF2DEA004DEF41 /* SwiftProtobuf in Frameworks */,
 				E944071F29FF3E89004DEF41 /* SotoLambda in Frameworks */,
-				E944071D29FF3E89004DEF41 /* SotoAPIGateway in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -173,7 +171,6 @@
 				E944071329FF2DEA004DEF41 /* SwiftProtobuf */,
 				E944071529FF2DEA004DEF41 /* SwiftProtobufPluginLibrary */,
 				E944071729FF2DEA004DEF41 /* protoc-gen-swift */,
-				E944071C29FF3E89004DEF41 /* SotoAPIGateway */,
 				E944071E29FF3E89004DEF41 /* SotoLambda */,
 			);
 			productName = "vimeo-uploader-swift";
@@ -656,11 +653,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E944071229FF2DEA004DEF41 /* XCRemoteSwiftPackageReference "swift-protobuf" */;
 			productName = "protoc-gen-swift";
-		};
-		E944071C29FF3E89004DEF41 /* SotoAPIGateway */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E944071B29FF3E89004DEF41 /* XCRemoteSwiftPackageReference "soto" */;
-			productName = SotoAPIGateway;
 		};
 		E944071E29FF3E89004DEF41 /* SotoLambda */ = {
 			isa = XCSwiftPackageProductDependency;
