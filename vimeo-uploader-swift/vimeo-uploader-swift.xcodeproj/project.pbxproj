@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E90BF2C32956CE4600304703 /* CrosswalkUploaderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90BF2C22956CE4600304703 /* CrosswalkUploaderApp.swift */; };
+		E90BF2C32956CE4600304703 /* VimeoUploaderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90BF2C22956CE4600304703 /* VimeoUploaderApp.swift */; };
 		E90BF2C52956CE4600304703 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90BF2C42956CE4600304703 /* ContentView.swift */; };
 		E90BF2C72956CE4600304703 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E90BF2C62956CE4600304703 /* Assets.xcassets */; };
 		E90BF2CA2956CE4600304703 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E90BF2C92956CE4600304703 /* Preview Assets.xcassets */; };
@@ -41,7 +41,7 @@
 
 /* Begin PBXFileReference section */
 		E90BF2BF2956CE4600304703 /* vimeo-uploader-swift.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "vimeo-uploader-swift.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		E90BF2C22956CE4600304703 /* CrosswalkUploaderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrosswalkUploaderApp.swift; sourceTree = "<group>"; };
+		E90BF2C22956CE4600304703 /* VimeoUploaderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VimeoUploaderApp.swift; sourceTree = "<group>"; };
 		E90BF2C42956CE4600304703 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		E90BF2C62956CE4600304703 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E90BF2C92956CE4600304703 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -109,7 +109,7 @@
 			isa = PBXGroup;
 			children = (
 				E93CC9892969DAF800FEC458 /* CustomClient.swift */,
-				E90BF2C22956CE4600304703 /* CrosswalkUploaderApp.swift */,
+				E90BF2C22956CE4600304703 /* VimeoUploaderApp.swift */,
 				E90BF2C42956CE4600304703 /* ContentView.swift */,
 				E944071929FF2F24004DEF41 /* model.pb.swift */,
 				E90BF2CB2956CE4600304703 /* vimeo_uploader_swift.entitlements */,
@@ -294,7 +294,7 @@
 				E93CC98A2969DAF800FEC458 /* CustomClient.swift in Sources */,
 				E90BF2C52956CE4600304703 /* ContentView.swift in Sources */,
 				E944071A29FF2F24004DEF41 /* model.pb.swift in Sources */,
-				E90BF2C32956CE4600304703 /* CrosswalkUploaderApp.swift in Sources */,
+				E90BF2C32956CE4600304703 /* VimeoUploaderApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -461,7 +461,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"vimeo-uploader-swift/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Crosswalk Uploader";
+				INFOPLIST_KEY_CFBundleDisplayName = "Vimeo Uploader";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -490,7 +490,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"vimeo-uploader-swift/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Crosswalk Uploader";
+				INFOPLIST_KEY_CFBundleDisplayName = "Vimeo Uploader";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
