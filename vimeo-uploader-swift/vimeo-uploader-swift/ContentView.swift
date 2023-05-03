@@ -12,7 +12,8 @@ struct ContentView: View {
     private var gridItemLayout = [GridItem(.flexible()), GridItem(.flexible())]
     
     private let client = CustomClient()
-    private let youtubeRegex = "^[a-zA-Z0-9_-]*$"
+    private let youtubeRegex = #"^[a-zA-Z0-9_-]*$"#
+    private let timeRegex = #"^(?:(?:([01]?\d|2[0-3]):)?([0-5]?\d):)?([0-5]?\d)$"#
     
     @State private var isConfirming: Bool = false
     @State private var isOpenUrl: Bool = false
@@ -27,6 +28,7 @@ struct ContentView: View {
     @State private var uploadUrl: String = ""
     
     @State private var disableVideoInputs = true
+    @State private var showPopup = false
     @State private var inProgress = false
     
     var body: some View {
@@ -35,18 +37,18 @@ struct ContentView: View {
                 Text("Video ID")
                 TextField("e.g. XsX3ATc3FbA", text: $videoId)
                     .onChange(of: videoId, perform: { newValue in
-                        print("Video id is \(videoId)")
                         resetInputs()
                         disableVideoInputs = true
-                        if videoId.range(of: youtubeRegex, options: .regularExpression) != nil {
+                        if !videoId.isEmpty, videoId.range(of: youtubeRegex, options: .regularExpression) != nil {
+                            print("Video id is \(videoId)")
                             Task {
                                 let fetchedMetadata = await client.getVideoMetadata(videoId: videoId)
                                 if fetchedMetadata != nil {
                                     videoMetadata = fetchedMetadata
                                     isConfirming = true
+                                    disableVideoInputs = false
                                 } else {
                                     resetInputs()
-                                    disableVideoInputs = true
                                 }
                             }
                         } else {
@@ -119,6 +121,12 @@ struct ContentView: View {
                 Text("Process")
                 Button("Click to start the process", action: {
                     print("Start process")
+                    print("Start by validating inputs")
+                    showPopup = showInvalidPopup()
+                    if showPopup {
+                        print("Failed validation")
+                        return
+                    }
                     inProgress = true
                     Task {
                         print("Firing off task")
@@ -149,10 +157,13 @@ struct ContentView: View {
                         inProgress = false
                     }
                 })
+                .alert("Failed to validate provided inputs. Please double check.", isPresented: $showPopup) {
+                    Button("Ok", role: .cancel) {}
+                }
                 .disabled(disableVideoInputs || inProgress)
                 .confirmationDialog(
                     """
-                    Completed the upload process video.
+                    Completed the uploading process.
                     Open the uploaded video link?
                     """,
                     isPresented: $isOpenUrl
@@ -185,6 +196,19 @@ struct ContentView: View {
         imageUrl = nil
         title = ""
         download = false
+    }
+    
+    private func showInvalidPopup() -> Bool {
+        if startTime.isEmpty || startTime.range(of: timeRegex, options: .regularExpression) == nil  {
+            return true
+        }
+        if endTime.isEmpty || endTime.range(of: timeRegex, options:. regularExpression) == nil {
+            return true
+        }
+        if title.isEmpty {
+            return true
+        }
+        return false
     }
 }
 
