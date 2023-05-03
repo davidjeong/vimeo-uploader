@@ -26,6 +26,14 @@ class CustomClient {
         )
     }
     
+    deinit {
+        do {
+            try client.syncShutdown()
+        } catch {
+            dump(error)
+        }
+    }
+    
     /**
      Get the video metadata from Lambda
      */

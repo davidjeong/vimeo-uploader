@@ -8,10 +8,10 @@
 import SwiftUI
 
 @main
-struct VimeoUploaderApp: App {
+struct vimeo_uploader_swiftApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView().frame(minWidth: 600, maxWidth: 1200, minHeight: 600, maxHeight: 1200)
+            ContentView()
         }
     }
 }
