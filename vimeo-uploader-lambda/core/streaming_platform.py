@@ -72,16 +72,19 @@ class YouTubePlatform(StreamingPlatform):
         ydl_opts = {
             'cachedir': '/tmp/yt-dlp'
         }
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.sanitize_info(ydl.extract_info(url, download=False))
-            return model_pb2.VideoMetadata(
-                video_id=info["id"],
-                title=info["title"],
-                author=info["uploader"],
-                length_in_sec=info["duration"],
-                publish_date=datetime.strptime(
-                    info["upload_date"],
-                    '%Y%m%d').strftime(DATE_FORMAT))
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.sanitize_info(ydl.extract_info(url, download=False))
+                return model_pb2.VideoMetadata(
+                    video_id=info["id"],
+                    title=info["title"],
+                    author=info["uploader"],
+                    length_in_sec=info["duration"],
+                    publish_date=datetime.strptime(
+                        info["upload_date"],
+                        '%Y%m%d').strftime(DATE_FORMAT))
+        except Exception as e:
+            raise VimeoUploaderInternalServerError(e)
 
     def download_video(
             self,
@@ -99,13 +102,16 @@ class YouTubePlatform(StreamingPlatform):
             'outtmpl': os.path.join(download_path, output_file_name),
             'cachedir': '/tmp/yt-dlp'
         }
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.add_post_processor(
-                self.FFmpegTrimPP(
-                    start_time_in_sec,
-                    end_time_in_sec))
-            error_code = ydl.download(url)
-            logging.info("Error code is %d", error_code)
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.add_post_processor(
+                    self.FFmpegTrimPP(
+                        start_time_in_sec,
+                        end_time_in_sec))
+                error_code = ydl.download(url)
+                logging.info("Error code is %d", error_code)
+        except Exception as e:
+            raise VimeoUploaderInternalServerError(e)
         return True
 
     def upload_video(self, video_path: str, title: str,

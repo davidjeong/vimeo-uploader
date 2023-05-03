@@ -12,7 +12,7 @@ struct ContentView: View {
     private var gridItemLayout = [GridItem(.flexible()), GridItem(.flexible())]
     
     private let client = CustomClient()
-    private let emptyResolutions = ["N/A"]
+    private let youtubeRegex = "^[a-zA-Z0-9_-]*$"
     
     @State private var isConfirming: Bool = false
     @State private var isOpenUrl: Bool = false
@@ -38,15 +38,19 @@ struct ContentView: View {
                         print("Video id is \(videoId)")
                         resetInputs()
                         disableVideoInputs = true
-                        Task {
-                            let fetchedMetadata = await client.getVideoMetadata(videoId: videoId)
-                            if fetchedMetadata != nil {
-                                videoMetadata = fetchedMetadata
-                                isConfirming = true
-                            } else {
-                                resetInputs()
-                                disableVideoInputs = true
+                        if videoId.range(of: youtubeRegex, options: .regularExpression) != nil {
+                            Task {
+                                let fetchedMetadata = await client.getVideoMetadata(videoId: videoId)
+                                if fetchedMetadata != nil {
+                                    videoMetadata = fetchedMetadata
+                                    isConfirming = true
+                                } else {
+                                    resetInputs()
+                                    disableVideoInputs = true
+                                }
                             }
+                        } else {
+                          print("Video id \(videoId) is not valid")
                         }
                     })
                     .disabled(inProgress)
