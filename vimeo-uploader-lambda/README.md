@@ -48,8 +48,4 @@ For `process-video` lambda function, the following ENV variables need to be set 
 - `VIMEO_CLIENT_SECRET`: API client secret for Vimeo
 - `VIMEO_CLIENT_TOKEN`: API client token for Vimeo
 
-Furthermore, the appropriate IAM permissions are required to be set for authentication
-for S3 upload.
-
-> :warning: `upload-thumbnail-image` uses multipart/form-data and proxies via api gateway, so it requires additional configuration.
-See steps from [link here](https://pinchoflogic.com/multiplepartfrom-data-aws-api-gateway-lambda).
+Furthermore, the appropriate IAM permissions are required to be set for authentication for S3 upload.
