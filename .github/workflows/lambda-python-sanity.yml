@@ -13,6 +13,8 @@ on:
       - '.gitignore'
       - '**/README.md'
       - 'vimeo-uploader-swift/**'
+  schedule:
+    - cron: '0 9 * * 1'
 
 jobs:
   test:
