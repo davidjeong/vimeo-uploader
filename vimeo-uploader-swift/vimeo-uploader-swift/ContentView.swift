@@ -15,7 +15,8 @@ struct ContentView: View {
     private let youtubeRegex = #"^[a-zA-Z0-9_-]*$"#
     private let timeRegex = #"^(?:(?:([01]?\d|2[0-3]):)?([0-5]?\d):)?([0-5]?\d)$"#
     
-    @State private var isConfirming: Bool = false
+    @State private var isConfirmingUse: Bool = false
+    @State private var isConfirmingProcess: Bool = false
     @State private var isOpenUrl: Bool = false
     @State private var videoMetadata: VideoMetadata?
 
@@ -45,7 +46,7 @@ struct ContentView: View {
                                 let fetchedMetadata = await client.getVideoMetadata(videoId: videoId)
                                 if fetchedMetadata != nil {
                                     videoMetadata = fetchedMetadata
-                                    isConfirming = true
+                                    isConfirmingUse = true
                                     disableVideoInputs = false
                                 } else {
                                     resetInputs()
@@ -63,7 +64,7 @@ struct ContentView: View {
                         Author: \(videoMetadata?.author ?? "N/A")
                         Upload Date: \(videoMetadata?.publishDate ?? "N/A")
                         """,
-                        isPresented: $isConfirming
+                        isPresented: $isConfirmingUse
                     ) {
                         Button("Use") {
                             disableVideoInputs = false
@@ -127,40 +128,59 @@ struct ContentView: View {
                         print("Failed validation")
                         return
                     }
-                    inProgress = true
-                    Task {
-                        print("Firing off task")
-                        var imageIdentifier = ""
-                        if let url = imageUrl {
-                            let data = try Data.init(contentsOf: url)
-                            let imageData = data.base64EncodedString(options: .lineLength64Characters)
-                            let thumbnailUploadResult = await client.uploadThumbnailImage(imageData: imageData)
-                            if let result = thumbnailUploadResult {
-                                imageIdentifier = result.objectKey
-                            }
-                        }
-                        let startTimeInSec = getSeconds(time: startTime)
-                        let endTimeInSec = getSeconds(time: endTime)
-                        let videoProcessResult = await client.processVideo(
-                            downloadPlatform: "youtube",
-                            uploadPlatform: "vimeo",
-                            videoId: videoId,
-                            startTimeInSec: startTimeInSec,
-                            endTimeInSec: endTimeInSec,
-                            imageIdentifier: imageIdentifier,
-                            title: title,
-                            download: download)
-                        if let urlString = videoProcessResult?.uploadURL {
-                            uploadUrl = urlString
-                            isOpenUrl = true
-                        }
-                        inProgress = false
-                    }
+                    isConfirmingProcess = true
                 })
                 .alert("Failed to validate provided inputs. Please double check.", isPresented: $showPopup) {
                     Button("Ok", role: .cancel) {}
                 }
                 .disabled(disableVideoInputs || inProgress)
+                .confirmationDialog(
+                    """
+                    Proceed uploading with the following?
+                    Video ID: \(videoId)
+                    Start Time: \(startTime)
+                    End Time: \(endTime)
+                    Thumbnail Image: \(imageUrl?.relativeString ?? "Not Set")
+                    Title: \(title)
+                    """,
+                    isPresented: $isConfirmingProcess
+                ) {
+                    Button("Proceed") {
+                        inProgress = true
+                        Task {
+                            print("Starting task")
+                            var imageIdentifier = ""
+                            if let url = imageUrl {
+                                let data = try Data.init(contentsOf: url)
+                                let imageData = data.base64EncodedString(options: .lineLength64Characters)
+                                let thumbnailUploadResult = await client.uploadThumbnailImage(imageData: imageData)
+                                if let result = thumbnailUploadResult {
+                                    imageIdentifier = result.objectKey
+                                }
+                            }
+                            let startTimeInSec = getSeconds(time: startTime)
+                            let endTimeInSec = getSeconds(time: endTime)
+                            let videoProcessResult = await client.processVideo(
+                                downloadPlatform: "youtube",
+                                uploadPlatform: "vimeo",
+                                videoId: videoId,
+                                startTimeInSec: startTimeInSec,
+                                endTimeInSec: endTimeInSec,
+                                imageIdentifier: imageIdentifier,
+                                title: title,
+                                download: download)
+                            if let urlString = videoProcessResult?.uploadURL {
+                                uploadUrl = urlString
+                                isOpenUrl = true
+                            }
+                            inProgress = false
+                            print("Task completed")
+                        }
+                    }
+                    Button("Edit", role: .cancel) {
+                        
+                    }
+                }
                 .confirmationDialog(
                     """
                     Completed the uploading process.
