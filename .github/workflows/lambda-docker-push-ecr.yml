@@ -33,9 +33,9 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
     - name: Download FFmpeg and unzip file
       run: |
-        curl https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz \
-          --connect-timeout 5 --max-time 5 --retry 5 --retry-delay 0 --output ffmpeg-release-amd64.tar.xz
-        tar -xvf ffmpeg-release-amd64.tar.xz
+        curl https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz \
+          --connect-timeout 5 --max-time 5 --retry 5 --retry-delay 0 --output ffmpeg-master-latest-linux64-gpl.tar.xz
+        tar -xvf ffmpeg-master-latest-linux64-gpl.tar.xz
     - name: Download and install the protobuf compiler
       run: |
         wget --tries=5 --connect-timeout=5 -O protoc-linux-x86_64.zip \
