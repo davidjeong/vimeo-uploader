@@ -100,7 +100,8 @@ class YouTubePlatform(StreamingPlatform):
         ydl_opts = {
             'format': "bv*+ba/b",
             'outtmpl': os.path.join(download_path, output_file_name),
-            'cachedir': '/tmp/yt-dlp'
+            'cachedir': '/tmp/yt-dlp',
+            'merge_output_format': 'mkv'
         }
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
