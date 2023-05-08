@@ -60,7 +60,7 @@ def _test_download_youtube_resources(
         tmpdir,
         "video")
 
-    expected_video_path = os.path.join(tmpdir, "video.webm")
+    expected_video_path = os.path.join(tmpdir, "video.mkv")
     assert exists(expected_video_path)
     video = VideoFileClip(expected_video_path)
     assert int(video.duration) == length_in_sec

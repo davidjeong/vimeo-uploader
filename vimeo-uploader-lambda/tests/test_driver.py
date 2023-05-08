@@ -61,12 +61,12 @@ def test_process_video() -> None:
         start_time_in_sec,
         end_time_in_sec,
         f"/tmp/{video_id}",
-        f"{video_id}_{start_time_in_sec}_{end_time_in_sec}")
+        f"{video_id}_{start_time_in_sec}_{end_time_in_sec}.mkv")
     s3_client.download_file.assert_called_with(
         s3_thumbnail_bucket_name, image_identifier, os.path.join(
             '/tmp', image_identifier))
     upload_platform.upload_video.assert_called_with(
-        f"/tmp/{video_id}/{video_id}_{str(start_time_in_sec)}_{str(end_time_in_sec)}",
+        f"/tmp/{video_id}/{video_id}_{str(start_time_in_sec)}_{str(end_time_in_sec)}.mkv",
         title,
         os.path.join('/tmp', image_identifier))
     assert video_process_result.download_url == download_url
