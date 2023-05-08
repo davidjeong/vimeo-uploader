@@ -84,7 +84,7 @@ class Driver:
             title = f"(CW) {current_date}"
 
         suffix = f"{str(start_time_in_sec)}_{str(end_time_in_sec)}"
-        video_name = f"{video_id}_{suffix}.mp4"
+        video_name = f"{video_id}_{suffix}"
         s3_object_key = f"{video_id}_{suffix}"
         download_path = os.path.join("/tmp", video_id)
 

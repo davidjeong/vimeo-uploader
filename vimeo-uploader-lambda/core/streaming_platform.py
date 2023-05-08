@@ -96,9 +96,9 @@ class YouTubePlatform(StreamingPlatform):
         url = self._get_youtube_url(video_id)
 
         # Download the video, and trim it using ffmpeg
-        # Fetch the best video / audio in mp4 / m4a
+        # Fetch the best video / audio
         ydl_opts = {
-            'format': "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]",
+            'format': "bv*+ba/b",
             'outtmpl': os.path.join(download_path, output_file_name),
             'cachedir': '/tmp/yt-dlp'
         }
@@ -133,20 +133,16 @@ class YouTubePlatform(StreamingPlatform):
             self.end_time_in_sec = end_time_in_sec
 
         def run(self, information):
-            input_opts = [
-                '-ss', str(self.start_time_in_sec),
-                '-to', str(self.end_time_in_sec)
-            ]
             output_opts = [
-                '-c:v',
+                '-ss', str(self.start_time_in_sec),
+                '-to', str(self.end_time_in_sec),
+                '-c',
                 'copy',
-                '-c:a',
-                'copy'
             ]
             filename = information['filepath']
             temp_filename = prepend_extension(filename, 'temp')
             # Ordering of inputs matters!
-            self.real_run_ffmpeg([(filename, input_opts)], [
+            self.real_run_ffmpeg([(filename, [])], [
                                  (temp_filename, output_opts)])
             os.replace(temp_filename, filename)
             return [], information

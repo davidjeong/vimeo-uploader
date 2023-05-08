@@ -58,9 +58,9 @@ def _test_download_youtube_resources(
         start_time_in_sec,
         end_time_in_sec,
         tmpdir,
-        "video.mp4")
+        "video")
 
-    expected_video_path = os.path.join(tmpdir, "video.mp4")
+    expected_video_path = os.path.join(tmpdir, "video.webm")
     assert exists(expected_video_path)
     video = VideoFileClip(expected_video_path)
     assert int(video.duration) == length_in_sec
@@ -75,7 +75,7 @@ def test_upload_video_to_vimeo() -> None:
     client = mock.MagicMock()
     upload_url = "https://vimeo.com/video_id"
     client.upload.return_value = upload_url
-    video_path = "/tmp/video_id/combined.mp4"
+    video_path = "/tmp/video_id/combined"
     video_title = "video title"
     thumbnail_image_path = 'tmp/image.png'
 
