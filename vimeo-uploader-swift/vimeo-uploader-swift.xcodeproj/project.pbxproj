@@ -19,7 +19,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		E96FFE5E2A02B35000F2630D /* vimeo-uploader-swift.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "vimeo-uploader-swift.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E96FFE5E2A02B35000F2630D /* Crosswalk Uploader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Crosswalk Uploader.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E96FFE612A02B35000F2630D /* vimeo_uploader_swiftApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = vimeo_uploader_swiftApp.swift; sourceTree = "<group>"; };
 		E96FFE632A02B35000F2630D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		E96FFE652A02B35100F2630D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -55,7 +55,7 @@
 		E96FFE5F2A02B35000F2630D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				E96FFE5E2A02B35000F2630D /* vimeo-uploader-swift.app */,
+				E96FFE5E2A02B35000F2630D /* Crosswalk Uploader.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -105,7 +105,7 @@
 				E96FFE7A2A02B3E700F2630D /* SotoLambda */,
 			);
 			productName = "vimeo-uploader-swift";
-			productReference = E96FFE5E2A02B35000F2630D /* vimeo-uploader-swift.app */;
+			productReference = E96FFE5E2A02B35000F2630D /* Crosswalk Uploader.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -295,7 +295,6 @@
 				CODE_SIGN_ENTITLEMENTS = "vimeo-uploader-swift/vimeo_uploader_swift.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"vimeo-uploader-swift/Preview Content\"";
 				DEVELOPMENT_TEAM = EBY7449492;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -310,7 +309,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.davidjeong.vimeo-uploader-swift";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "Crosswalk Uploader";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -325,7 +324,6 @@
 				CODE_SIGN_ENTITLEMENTS = "vimeo-uploader-swift/vimeo-uploader-swiftRelease.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"vimeo-uploader-swift/Preview Content\"";
 				DEVELOPMENT_TEAM = EBY7449492;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -340,7 +338,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.davidjeong.vimeo-uploader-swift";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "Crosswalk Uploader";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
