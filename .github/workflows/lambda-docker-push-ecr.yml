@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - '.github/workflows/*'
       - 'vimeo-uploader-lambda/app.py'
       - 'vimeo-uploader-lambda/core/*'
       - 'vimeo-uploader-lambda/Dockerfile'
