@@ -1,5 +1,5 @@
 PyVimeo~=1.1.0
 boto3~=1.34.7
 botocore~=1.34.7
-protobuf~=4.25.1
+protobuf~=5.26.1
 yt-dlp~=2024.4.9
